@@ -2,15 +2,14 @@
 
 #include <string>
 
+#include <msclr\marshal_cppstd.h>
+
 QString toQString(System::String^ string)
 {
-  System::IntPtr chars = System::Runtime::InteropServices::Marshal::StringToHGlobalUni(string);
-  QString qString = QString::fromWCharArray((wchar_t*)chars.ToPointer());
-  System::Runtime::InteropServices::Marshal::FreeHGlobal(chars);
-  return qString;
+  return QString::fromStdWString(msclr::interop::marshal_as<std::wstring>(string));
 }
 
 System::String^ toDotNetString(const QString& qString)
 {
-  return gcnew System::String(qString.toStdWString().c_str());
+  return msclr::interop::marshal_as<System::String^>(qString.toStdWString());
 }
