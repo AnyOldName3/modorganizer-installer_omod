@@ -1,21 +1,22 @@
-cmake_minimum_required(VERSION 3.16)
+# CMake 3.18 due to https://gitlab.kitware.com/cmake/cmake/-/issues/20764
+cmake_minimum_required(VERSION 3.18)
 
-# set globally as Nuget gets confused about ZERO_CHECK and ALL_BUILD otherwise
+# set globally as Nuget gets confused about ZERO_CHECK, ALL_BUILD and INSTALL otherwise
 set(CMAKE_DOTNET_TARGET_FRAMEWORK_VERSION "v4.8")
-# This doesn't fix the INSTALL target - that still needs doing manually
 
-# Dummy .NET project as VS_PACKAGE_REFERENCES doesn't work on C++/CLI projects yet
-project(dummy_cs_project LANGUAGES CSharp)
-add_library(${PROJECT_NAME} SHARED DummyCSFile.cs)
-set_target_properties(${PROJECT_NAME} PROPERTIES
-	VS_PACKAGE_REFERENCES "OMODFramework_2.0.0;OMODFramework.Scripting_2.0.0;SharpZipLib_1.2.0;System.Drawing.Common_4.7.0"
-)
-
-
-
-project(installer_omod)
+project(installer_omod LANGUAGES CXX CSharp)
 set(project_type plugin)
 set(enable_warnings OFF)
+
+
+# Dummy .NET library as VS_PACKAGE_REFERENCES doesn't work on C++/CLI projects yet
+# Needs to be declared before cmake_common stuff is included as that polutes the environment and makes C# get compiled as C++
+# This only mostly works - you need to build via Visual Studio or run `msbuild -t:restore installer_omod.sln` at least once before this will build via the command line due to https://gitlab.kitware.com/cmake/cmake/-/issues/20646
+add_library(dummy_cs_project SHARED DummyCSFile.cs)
+set_target_properties(dummy_cs_project PROPERTIES
+	LINKER_LANGUAGE CSharp
+	VS_PACKAGE_REFERENCES "OMODFramework_2.0.0;OMODFramework.Scripting_2.0.0;SharpZipLib_1.2.0;System.Drawing.Common_4.7.0"
+)
 
 if(DEFINED DEPENDENCIES_DIR)
 	include(${DEPENDENCIES_DIR}/modorganizer_super/cmake_common/project.cmake)
@@ -29,8 +30,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	# latest doesn't work with CLR
 	CXX_STANDARD 17
 	#DOTNET_TARGET_FRAMEWORK "netstandard2.0"
-	#VS_PACKAGE_REFERENCES "dummy_cs_project;OMODFramework.dll;OMODFramework.Scripting.dll"
-	#VS_DOTNET_REFERENCES "dummy_cs_project;OMODFramework;OMODFramework.Scripting"
 	# Ideally we'd use "$<TARGET_FILE_DIR:dummy_cs_project>/OMODFramework.dll", but this property doesn't support generator expressions.
 	VS_DOTNET_REFERENCE_OMODFramework "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.dll"
 	VS_DOTNET_REFERENCE_OMODFramework.Scripting "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.Scripting.dll"
