@@ -21,13 +21,14 @@ void ScriptFunctions::Message(System::String^ msg, System::String^ title)
   QMessageBox::information(mParentWidget, toQString(title), toQString(msg));
 }
 
-System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collections::Generic::List<System::String^>^, System::String^, bool, System::Collections::Generic::List<System::String^>^, System::Collections::Generic::List<System::String^>^)
+System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collections::Generic::List<System::String^>^ items, System::String^ title, bool isMultiSelect, System::Collections::Generic::List<System::String^>^ previews, System::Collections::Generic::List<System::String^>^ descriptions)
 {
+  return gcnew System::Collections::Generic::List<int>(1);
   throw gcnew System::NotImplementedException();
   // TODO: insert return statement here
 }
 
-System::String^ ScriptFunctions::InputString(System::String^, System::String^)
+System::String^ ScriptFunctions::InputString(System::String^ title, System::String^ initialText)
 {
   throw gcnew System::NotImplementedException();
   // TODO: insert return statement here
