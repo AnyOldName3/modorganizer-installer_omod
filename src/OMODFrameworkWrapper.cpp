@@ -2,8 +2,10 @@
 
 using namespace cli;
 
+#include <imodinterface.h>
 #include <iplugingame.h>
 #include <log.h>
+#include <utility.h>
 
 #include "implementations/CodeProgress.h"
 #include "implementations/Logger.h"
@@ -71,8 +73,36 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (omod.HasReadme)
       MOBase::log::debug("{}", toUTF8String(omod.GetReadme()));
 
-    OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget);
-    return EInstallResult();
+    if (omod.HasScript)
+    {
+      MOBase::log::debug("Mod has script. Run it.");
+      OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget);
+      OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
+    }
+    else
+    {
+      MOBase::log::debug("Mod has no script. Install contents directly.");
+      System::String^ data = omod.GetDataFiles();
+      System::String^ plugins = omod.GetPlugins();
+      if (data)
+      {
+        if (MOBase::shellMove(toQString(data) + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+          MOBase::log::debug("Installed mod files.");
+        else
+          MOBase::log::error("Error while installing mod files.");
+        QFile::remove(toQString(data));
+      }
+      if (plugins)
+      {
+        if (MOBase::shellMove(toQString(plugins) + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+          MOBase::log::debug("Installed mod plugins.");
+        else
+          MOBase::log::error("Error while installing mod plugins.");
+        QFile::remove(toQString(plugins));
+      }
+    }
+
+    return EInstallResult::RESULT_SUCCESS;
   }
   catch (System::Exception^ dotNetException)
   {
