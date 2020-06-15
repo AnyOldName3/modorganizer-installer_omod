@@ -1,11 +1,16 @@
+#include "OMODFrameworkWrapper.h"
+
 using namespace cli;
 
+#include <iplugingame.h>
 #include <log.h>
+
+#include "implementations/CodeProgress.h"
+#include "implementations/Logger.h"
+#include "implementations/ScriptFunctions.h"
 
 #include "interop/QtDotNetConverters.h"
 #include "interop/StdDotNetConverters.h"
-
-#include "OMODFrameworkWrapper.h"
 
 // We want to search the plugin data directory for .NET DLLs
 class AssemblyResolver
@@ -53,7 +58,20 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   {
     initFrameworkSettings();
     MOBase::log::debug("Installing {} as OMOD", archiveName);
-    OMODFramework::OMOD(toDotNetString(archiveName));
+    // Stack allocating should dispose like a `using` statement in C#
+    OMODFramework::OMOD omod(toDotNetString(archiveName));
+
+    if (!System::String::IsNullOrEmpty(omod.ModName))
+      modName.update(toQString(omod.ModName), MOBase::EGuessQuality::GUESS_META);
+
+    MOBase::IModInterface* modInterface = mMoInfo->createMod(modName);
+    if (!modInterface)
+      return EInstallResult::RESULT_CANCELED;
+    
+    if (omod.HasReadme)
+      MOBase::log::debug("{}", toUTF8String(omod.GetReadme()));
+
+    OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget);
     return EInstallResult();
   }
   catch (System::Exception^ dotNetException)
