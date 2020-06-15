@@ -6,7 +6,9 @@
 
 QString toQString(System::String^ string)
 {
-  return QString::fromStdWString(msclr::interop::marshal_as<std::wstring>(string));
+  if (string)
+    return QString::fromStdWString(msclr::interop::marshal_as<std::wstring>(string));
+  return "null .NET string";
 }
 
 System::String^ toDotNetString(const QString& qString)
