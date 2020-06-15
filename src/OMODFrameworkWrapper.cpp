@@ -51,6 +51,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 {
   try
   {
+    initFrameworkSettings();
     MOBase::log::debug("Installing {} as OMOD", archiveName);
     OMODFramework::OMOD(toDotNetString(archiveName));
     return EInstallResult();
@@ -59,4 +60,27 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   {
     throw toStdException(dotNetException);
   }
+}
+
+void OMODFrameworkWrapper::initFrameworkSettings()
+{
+  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress();
+
+  OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
+  loggingSettings->UseLogger = true;
+  loggingSettings->LogToFile = false;
+  loggingSettings->LowestLoggingLevel = Logger::OMODLoggingLevel(MOBase::log::getDefault().level());
+  loggingSettings->Logger = gcnew Logger();
+
+  OMODFramework::ScriptExecutionSettings^ scriptSettings = gcnew OMODFramework::ScriptExecutionSettings();
+  scriptSettings->EnableWarnings = true;
+  scriptSettings->OblivionGamePath = toDotNetString(mMoInfo->managedGame()->gameDirectory().path());
+  System::String^ iniLocation = toDotNetString(mMoInfo->profile()->localSettingsEnabled() ? mMoInfo->profile()->absolutePath() : mMoInfo->managedGame()->documentsDirectory().path());
+  scriptSettings->OblivionINIPath = System::IO::Path::Combine(iniLocation, "Oblivion.ini");
+  scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(iniLocation, "RendererInfo.txt");
+  scriptSettings->ReadINIWithInterface = false;
+  scriptSettings->ReadRendererInfoWithInterface = false;
+  scriptSettings->HandleBSAsWithInterface = false;
+  scriptSettings->PatchWithInterface = false;
+  scriptSettings->UseSafePatching = true;
 }

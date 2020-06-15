@@ -12,6 +12,9 @@ public:
 
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
+protected:
+  void initFrameworkSettings();
+
 private:
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
