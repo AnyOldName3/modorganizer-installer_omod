@@ -38,6 +38,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # C++/CLI doesn't support two-phase lookup yet
 target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:twoPhase-")
 
+# We don't want ERROR defined
+target_compile_definitions(${PROJECT_NAME} PRIVATE "NOGDI")
+
 # We don't need to actually link with dummy_cs_project, especially as its dependencies aren't pulled in. We do need it to build first, though.
 add_dependencies(${PROJECT_NAME} dummy_cs_project)
 
