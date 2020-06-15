@@ -15,7 +15,7 @@ set(enable_warnings OFF)
 add_library(dummy_cs_project SHARED DummyCSFile.cs)
 set_target_properties(dummy_cs_project PROPERTIES
 	LINKER_LANGUAGE CSharp
-	VS_PACKAGE_REFERENCES "OMODFramework_2.0.0;OMODFramework.Scripting_2.0.0;SharpZipLib_1.2.0;System.Drawing.Common_4.7.0"
+	VS_PACKAGE_REFERENCES "OMODFramework_2.0.1;OMODFramework.Scripting_2.0.0"
 )
 
 if(DEFINED DEPENDENCIES_DIR)
@@ -45,7 +45,7 @@ install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/OMODFramework.dll" DESTINATION
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.dll" DESTINATION "${install_dir}/data")
-install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.pdb" DESTINATION pdb)
+#install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.pdb" DESTINATION pdb)
 install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.pdb" DESTINATION pdb)
 install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.pdb" DESTINATION pdb)
 #install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.pdb" DESTINATION pdb)
