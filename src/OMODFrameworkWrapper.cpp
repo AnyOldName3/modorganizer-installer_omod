@@ -2,6 +2,8 @@
 
 using namespace cli;
 
+#include <algorithm>
+
 #include <imodinterface.h>
 #include <iplugingame.h>
 #include <log.h>
@@ -69,7 +71,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     MOBase::IModInterface* modInterface = mMoInfo->createMod(modName);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
-    
+
     if (omod.HasReadme)
       MOBase::log::debug("{}", toUTF8String(omod.GetReadme()));
 
@@ -101,6 +103,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         QFile::remove(toQString(plugins));
       }
     }
+
+    // on success, set mod info
+    MOBase::VersionInfo modVersion(std::max(int(omod.MajorVersion), 0), std::max(int(omod.MinorVersion), 0), std::max(int(omod.BuildVersion), 0));
+    modInterface->setVersion(modVersion);
 
     return EInstallResult::RESULT_SUCCESS;
   }
