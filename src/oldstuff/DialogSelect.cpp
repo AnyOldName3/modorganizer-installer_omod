@@ -110,6 +110,10 @@ std::optional<QVector<int>> DialogSelect(
   auto* buttons = new QDialogButtonBox(
     QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
 
+  /* QObject::connect: signal not found in QDialogButtonBox
+     even though this worked with my initial attempt.
+     Holt had the same issue: https://stackoverflow.com/questions/61879664/qobjectconnect-not-working-signal-not-found-with-function-syntax
+     The new syntax is much better, but as this code wants replacing, that's not a hill I'm going to die on.
   QObject::connect(buttons, &QDialogButtonBox::accepted, [&] {
     d.accept();
   });
@@ -117,6 +121,9 @@ std::optional<QVector<int>> DialogSelect(
   QObject::connect(buttons, &QDialogButtonBox::rejected, [&] {
     d.reject();
   });
+  */
+  QObject::connect(buttons, SIGNAL(accepted()), &d, SLOT(accept()));
+  QObject::connect(buttons, SIGNAL(rejected()), &d, SLOT(reject()));
 
   mainLayout->addWidget(buttons);
 
@@ -213,6 +220,8 @@ std::optional<QVector<int>> DialogSelect(
 
     QString labelText = items[i];
     bool checked = false;
+
+    // THIS IS IMPORTANT WHEN REPLACING THIS WITH BETTER CODE. OMODS HAVE A PIPE AT THE START OF ANY OPTIONS SELECTED BY DEFAULT.
     if (labelText.startsWith('|'))
     {
       labelText = labelText.remove(0, 1);

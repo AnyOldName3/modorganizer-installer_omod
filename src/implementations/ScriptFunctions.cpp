@@ -6,6 +6,7 @@
 #include <iplugingame.h>
 
 #include "../interop/QtDotNetConverters.h"
+#include "../oldstuff/DialogSelect.h"
 
 ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo) {}
 
@@ -24,11 +25,46 @@ void ScriptFunctions::Message(System::String^ msg, System::String^ title)
   QMessageBox::information(mParentWidget, toQString(title), toQString(msg));
 }
 
-System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collections::Generic::List<System::String^>^ items, System::String^ title, bool isMultiSelect, System::Collections::Generic::List<System::String^>^ previews, System::Collections::Generic::List<System::String^>^ descriptions)
+System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collections::Generic::List<System::String^>^ items,
+                                                                 System::String^ title,
+                                                                 bool isMultiSelect,
+                                                                 System::Collections::Generic::List<System::String^>^ previews,
+                                                                 System::Collections::Generic::List<System::String^>^ descriptions)
 {
-  return gcnew System::Collections::Generic::List<int>(1);
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  QVector<QString> qItems;
+  qItems.reserve(items ? items->Count : 0);
+  QVector<QString> qPreviews;
+  qPreviews.reserve(previews ? previews->Count : 0);
+  QVector<QString> qDescriptions;
+  qDescriptions.reserve(descriptions ? descriptions->Count : 0);
+
+  // Expect red squiggles. No one told intellisense about this syntax, but it's the least ugly.
+  if (items)
+  {
+    for each (System::String ^ item in items)
+      qItems.push_back(toQString(item));
+  }
+
+  if (previews)
+  {
+    for each (System::String ^ preview in previews)
+      qPreviews.push_back(toQString(preview));
+  }
+
+  if (descriptions)
+  {
+    for each (System::String ^ description in descriptions)
+      qDescriptions.push_back(toQString(description));
+  }
+
+  std::optional<QVector<int>> qResponse = DialogSelect(mParentWidget, toQString(title), qItems, qDescriptions, qPreviews, isMultiSelect);
+  if (!qResponse.has_value())
+    return nullptr;
+
+  System::Collections::Generic::List<int>^ response = gcnew System::Collections::Generic::List<int>(qResponse.value().length());
+  for (const auto selection : qResponse.value())
+    response->Add(selection);
+  return response;
 }
 
 System::String^ ScriptFunctions::InputString(System::String^ title, System::String^ initialText)
