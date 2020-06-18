@@ -108,6 +108,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     MOBase::VersionInfo modVersion(std::max(int(omod.MajorVersion), 0), std::max(int(omod.MinorVersion), 0), std::max(int(omod.BuildVersion), 0));
     modInterface->setVersion(modVersion);
 
+    // TODO: parse omod.Website. If it's Nexus, set the ID, otherwise set custom URL in meta.ini. We can't set the URL with the installation manager.
+    // TODO: maybe convert omod.Description to HTML and set it as nexusDescription
+    // TODO: maybe Holt will finish the proposed mod metadata API and there'll be a better, tidier option.
+
     return EInstallResult::RESULT_SUCCESS;
   }
   catch (System::Exception^ dotNetException)
@@ -118,7 +122,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
 void OMODFrameworkWrapper::initFrameworkSettings()
 {
-  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress();
+  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(mParentWidget);
 
   OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
   loggingSettings->UseLogger = true;
