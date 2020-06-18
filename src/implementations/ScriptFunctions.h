@@ -4,10 +4,12 @@ using namespace cli;
 
 #include <QWidget>
 
+#include <imoinfo.h>
+
 ref class ScriptFunctions : OMODFramework::Scripting::IScriptFunctions
 {
 public:
-  ScriptFunctions(QWidget* parentWidget);
+  ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo);
 
   // note: C++/CLI wants virtual for interface implementations, not override
   virtual void Warn(System::String^ msg);
@@ -60,4 +62,5 @@ public:
 
 private:
   QWidget* mParentWidget;
+  MOBase::IOrganizer* mMoInfo;
 };

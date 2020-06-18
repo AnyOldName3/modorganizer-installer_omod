@@ -1,10 +1,13 @@
 #include "ScriptFunctions.h"
 
+#include <QDir>
 #include <QMessageBox>
+
+#include <iplugingame.h>
 
 #include "../interop/QtDotNetConverters.h"
 
-ScriptFunctions::ScriptFunctions(QWidget* parentWidget) : mParentWidget(parentWidget) {}
+ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo) {}
 
 void ScriptFunctions::Warn(System::String^ msg)
 {
@@ -73,41 +76,40 @@ System::String^ ScriptFunctions::ReadRendererInfo(System::String^ name)
 
 bool ScriptFunctions::DataFileExists(System::String^ path)
 {
-  return false;
+  return mMoInfo->resolvePath(toQString(path)) != "";
 }
 
 bool ScriptFunctions::HasScriptExtender()
 {
-  return false;
+  return mMoInfo->managedGame()->gameDirectory().exists("obse_loader.exe");
 }
 
 bool ScriptFunctions::HasGraphicsExtender()
 {
-  return false;
+  return DataFileExists("obse\\plugins\\obge.dll");
 }
 
 System::Version^ ScriptFunctions::ScriptExtenderVersion()
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  return gcnew System::Version(System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(mMoInfo->managedGame()->gameDirectory().filePath("obse_loader.exe")))->FileVersion);
 }
 
 System::Version^ ScriptFunctions::GraphicsExtenderVersion()
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  return gcnew System::Version(System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(mMoInfo->resolvePath("obse\\plugins\\obge.dll")))->FileVersion);
 }
 
 System::Version^ ScriptFunctions::OblivionVersion()
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  return gcnew System::Version(System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(mMoInfo->managedGame()->gameDirectory().filePath("oblivion.exe")))->FileVersion);
 }
 
 System::Version^ ScriptFunctions::OBSEPluginVersion(System::String^ path)
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  QString pluginPath = mMoInfo->resolvePath(toQString(System::IO::Path::Combine("obse", "plugins", System::IO::Path::ChangeExtension(path, ".dll"))));
+  if (pluginPath.isEmpty())
+    return nullptr;
+  return gcnew System::Version(System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(pluginPath))->FileVersion);
 }
 
 System::Collections::Generic::IEnumerable<OMODFramework::Scripting::ScriptESP>^ ScriptFunctions::GetESPs()
