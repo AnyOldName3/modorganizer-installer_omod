@@ -7,7 +7,6 @@
 #include <QDialogButtonBox>
 #include <QDebug>
 #include <QImageReader>
-#include <QLabel>
 #include <QPlainTextEdit>
 #include <QRadioButton>
 #include <QSplitter>
@@ -36,60 +35,66 @@ protected:
   }
 };
 
-class FixedAspectRatioImageLabel : public QLabel
+
+FixedAspectRatioImageLabel::FixedAspectRatioImageLabel(QWidget* parent) : QLabel(parent)
 {
-public:
-  void setUnscaledPixmap(const QPixmap& pixmap)
+}
+
+void FixedAspectRatioImageLabel::setUnscaledPixmap(const QPixmap& pixmap)
+{
+  mUnscaledPixmap = pixmap;
+  setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+  rescalePixmap(size());
+
+  copySizeLabel.setPixmap(pixmap);
+}
+
+QSize FixedAspectRatioImageLabel::sizeHint() const
+{
+  qDebug() << "sizeHint() QLabel::sizeHint() =" << QLabel::sizeHint() << ", mUnscaledPixmap.size()" << mUnscaledPixmap.size();
+  if (mUnscaledPixmap.isNull())
   {
-    mUnscaledPixmap = pixmap;
-    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-    rescalePixmap(size());
-
-    copySizeLabel.setPixmap(pixmap);
+    qDebug("Top");
+    return QLabel::sizeHint();
   }
-
-  QSize sizeHint() const override
+  else
   {
-    qDebug() << "sizeHint() QLabel::sizeHint() =" << QLabel::sizeHint() << ", mUnscaledPixmap.size()" << mUnscaledPixmap.size();
-    if (mUnscaledPixmap.isNull())
-    {
-      qDebug("Top");
-      return QLabel::sizeHint();
-    }
-    else
-    {
-      qDebug("Bottom");
-      // maybe should add frame border
-      return mUnscaledPixmap.size();
-      //return copySizeLabel.sizeHint();
-    }
+    qDebug("Bottom");
+    // maybe should add frame border
+    return mUnscaledPixmap.size();
+    //return copySizeLabel.sizeHint();
   }
+}
 
-  int heightForWidth(int width) const override
-  {
-    // this ignores the difference between size and contentsRect size
-    return mUnscaledPixmap.height() * width / (double)mUnscaledPixmap.width();
-  }
+bool FixedAspectRatioImageLabel::hasHeightForWidth() const
+{
+  return true;
+}
 
-protected:
-  void resizeEvent(QResizeEvent* resizeEvent) override
-  {
-    QLabel::resizeEvent(resizeEvent);
-    qDebug() << "rect size" << rect().size() << ", frameRect size" << frameRect().size() << ", contentsRect" << contentsRect().size();
-    rescalePixmap(contentsRect().size());
-  }
+int FixedAspectRatioImageLabel::heightForWidth(int width) const
+{
+  // this ignores the difference between size and contentsRect size
+  return mUnscaledPixmap.height() * width / (double)mUnscaledPixmap.width();
+}
 
-private:
-  void rescalePixmap(const QSize& size)
-  {
-    qDebug() << "Resizing to" << size;
-    qDebug() << "Margin is" << margin();
-    setPixmap(mUnscaledPixmap.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-  }
+int FixedAspectRatioImageLabel::widthForHeight(int height) const
+{
+  return mUnscaledPixmap.width() * height / (double)mUnscaledPixmap.height();
+}
 
-  QPixmap mUnscaledPixmap;
-  QLabel copySizeLabel;
-};
+void FixedAspectRatioImageLabel::resizeEvent(QResizeEvent* resizeEvent)
+{
+  QLabel::resizeEvent(resizeEvent);
+  qDebug() << "rect size" << rect().size() << ", frameRect size" << frameRect().size() << ", contentsRect" << contentsRect().size();
+  rescalePixmap(contentsRect().size());
+}
+
+void FixedAspectRatioImageLabel::rescalePixmap(const QSize& size)
+{
+  qDebug() << "Resizing to" << size;
+  qDebug() << "Margin is" << margin();
+  setPixmap(mUnscaledPixmap.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+}
 
 
 std::optional<QVector<int>> DialogSelect(

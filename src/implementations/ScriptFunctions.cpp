@@ -1,9 +1,15 @@
 #include "ScriptFunctions.h"
 
 #include <QDir>
+#include <QGridLayout>
+#include <QInputDialog>
+#include <QImageReader>
+#include <QLabel>
 #include <QMessageBox>
+#include <QScreen>
 
 #include <iplugingame.h>
+#include <log.h>
 
 #include "../interop/QtDotNetConverters.h"
 #include "../oldstuff/DialogSelect.h"
@@ -69,8 +75,7 @@ System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collect
 
 System::String^ ScriptFunctions::InputString(System::String^ title, System::String^ initialText)
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  return toDotNetString(QInputDialog::getText(mParentWidget, toQString(title), toQString(title), QLineEdit::Normal, initialText ? toQString(initialText) : ""));
 }
 
 int ScriptFunctions::DialogYesNo(System::String^ title)
@@ -85,7 +90,30 @@ int ScriptFunctions::DialogYesNo(System::String^ title, System::String^ message)
 
 void ScriptFunctions::DisplayImage(System::String^ path, System::String^ title)
 {
-  throw gcnew System::NotImplementedException();
+  QImageReader reader(toQString(path));
+  QImage image = reader.read();
+  if (!image.isNull())
+  {
+    QPixmap pixmap = QPixmap::fromImage(image);
+    MOBase::log::debug("image size {}, pixmap size {}", image.size(), pixmap.size());
+    QDialog popup;
+    QLayout* layout = new QGridLayout(&popup);
+    popup.setLayout(layout);
+    FixedAspectRatioImageLabel* label = new FixedAspectRatioImageLabel(&popup);
+    label->setUnscaledPixmap(pixmap);
+
+    QSize screenSize = mParentWidget->screen()->availableSize();
+    int maxHeight = static_cast<int>(screenSize.height() * 0.8f);
+    if (pixmap.size().height() > maxHeight)
+      // This is approximate due to borders, label can sort out details.
+      popup.resize(label->widthForHeight(maxHeight), maxHeight);
+
+    layout->addWidget(label);
+    popup.setWindowTitle(toQString(title));
+    popup.exec();
+  }
+  else
+    MOBase::log::error("Unable to display {}. Error was {}: {}", toQString(path), reader.error(), reader.errorString());
 }
 
 void ScriptFunctions::DisplayText(System::String^ text, System::String^ title)
