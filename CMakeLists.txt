@@ -33,7 +33,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	# Ideally we'd use "$<TARGET_FILE_DIR:dummy_cs_project>/OMODFramework.dll", but this property doesn't support generator expressions.
 	VS_DOTNET_REFERENCE_OMODFramework "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.dll"
 	VS_DOTNET_REFERENCE_OMODFramework.Scripting "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.Scripting.dll"
-	VS_DOTNET_REFERENCES "System.dll"
+	VS_DOTNET_REFERENCES "System.dll;System.Core.dll"
 )
 
 # C++/CLI doesn't support two-phase lookup yet

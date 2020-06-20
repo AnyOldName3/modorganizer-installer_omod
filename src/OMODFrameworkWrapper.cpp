@@ -80,6 +80,18 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       MOBase::log::debug("Mod has script. Run it.");
       OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget, mMoInfo);
       OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
+      if (!scriptData)
+        throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
+      if (scriptData->CancelInstall)
+        return EInstallResult::RESULT_CANCELED;
+
+      scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
+      for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
+      {
+        System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), file.InstallTo);
+        System::IO::Directory::CreateDirectory(System::IO::Path::GetDirectoryName(destinationPath));
+        System::IO::File::Copy(file.InstallFrom, destinationPath, true);
+      }
     }
     else
     {
