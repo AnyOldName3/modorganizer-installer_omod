@@ -25,14 +25,16 @@ else()
 endif()
 add_subdirectory(src)
 
+# Ideally we'd use "$<TARGET_FILE_DIR:dummy_cs_project>", but the relevant property doesn't support generator expressions.
+set(omod_framework_prefix "${CMAKE_BINARY_DIR}/$(Configuration)" CACHE PATH "Path where OMODFramework.dll and OMODFramework.Scripting.dll can be found. The default value is where the nuget package artifacts will end up. Override if you want to use a custom build.")
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	COMMON_LANGUAGE_RUNTIME ""
 	# latest doesn't work with CLR
 	CXX_STANDARD 17
 	#DOTNET_TARGET_FRAMEWORK "netstandard2.0"
-	# Ideally we'd use "$<TARGET_FILE_DIR:dummy_cs_project>/OMODFramework.dll", but this property doesn't support generator expressions.
-	VS_DOTNET_REFERENCE_OMODFramework "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.dll"
-	VS_DOTNET_REFERENCE_OMODFramework.Scripting "${CMAKE_BINARY_DIR}/$(Configuration)/OMODFramework.Scripting.dll"
+	VS_DOTNET_REFERENCE_OMODFramework "${omod_framework_prefix}/OMODFramework.dll"
+	VS_DOTNET_REFERENCE_OMODFramework.Scripting "${omod_framework_prefix}/OMODFramework.Scripting.dll"
 	VS_DOTNET_REFERENCES "System.dll;System.Core.dll"
 )
 
