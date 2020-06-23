@@ -16,5 +16,5 @@ void CodeProgress::SetProgress(__int64 inSize, __int64 outSize)
 
 CodeProgress::~CodeProgress()
 {
-  MOBase::log::debug("CodeProgress destructor called");
+  MOBase::log::debug("CodeProgress 'destructor' called");
 }
