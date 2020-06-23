@@ -134,7 +134,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
 void OMODFrameworkWrapper::initFrameworkSettings()
 {
-  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(mParentWidget);
+  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress();
 
   OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
   loggingSettings->UseLogger = true;
