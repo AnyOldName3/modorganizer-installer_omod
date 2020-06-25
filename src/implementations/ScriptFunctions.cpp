@@ -9,6 +9,7 @@
 #include <QScreen>
 
 #include <iplugingame.h>
+#include <ipluginlist.h>
 #include <log.h>
 
 #include "../interop/QtDotNetConverters.h"
@@ -178,8 +179,20 @@ System::Version^ ScriptFunctions::OBSEPluginVersion(System::String^ path)
 
 System::Collections::Generic::IEnumerable<OMODFramework::Scripting::ScriptESP>^ ScriptFunctions::GetESPs()
 {
-  throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  QStringList plugins = mMoInfo->pluginList()->pluginNames();
+  System::Collections::Generic::List<OMODFramework::Scripting::ScriptESP>^ pluginList = gcnew System::Collections::Generic::List<OMODFramework::Scripting::ScriptESP>(plugins.count());
+  for (const auto& pluginName : plugins)
+  {
+    auto state = mMoInfo->pluginList()->state(pluginName);
+    if (state != MOBase::IPluginList::PluginState::STATE_MISSING)
+    {
+      OMODFramework::Scripting::ScriptESP plugin;
+      plugin.Name = toDotNetString(pluginName);
+      plugin.Active = state == MOBase::IPluginList::PluginState::STATE_ACTIVE;
+      pluginList->Add(plugin);
+    }
+  }
+  return pluginList;
 }
 
 System::Collections::Generic::IEnumerable<System::String^>^ ScriptFunctions::GetActiveOMODNames()
