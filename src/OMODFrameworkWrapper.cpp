@@ -153,4 +153,6 @@ void OMODFrameworkWrapper::initFrameworkSettings()
   scriptSettings->HandleBSAsWithInterface = false;
   scriptSettings->PatchWithInterface = false;
   scriptSettings->UseSafePatching = true;
+
+  OMODFramework::Framework::Settings->ScriptExecutionSettings = scriptSettings;
 }
