@@ -15,7 +15,7 @@ set(enable_warnings OFF)
 add_library(dummy_cs_project SHARED DummyCSFile.cs)
 set_target_properties(dummy_cs_project PROPERTIES
 	LINKER_LANGUAGE CSharp
-	VS_PACKAGE_REFERENCES "OMODFramework_2.0.1;OMODFramework.Scripting_2.0.0"
+	VS_PACKAGE_REFERENCES "OMODFramework_2.0.1;OMODFramework.Scripting_2.0.0;RtfPipe_1.0.7388.1242"
 )
 
 if(DEFINED DEPENDENCIES_DIR)
@@ -35,6 +35,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 	#DOTNET_TARGET_FRAMEWORK "netstandard2.0"
 	VS_DOTNET_REFERENCE_OMODFramework "${omod_framework_prefix}/OMODFramework.dll"
 	VS_DOTNET_REFERENCE_OMODFramework.Scripting "${omod_framework_prefix}/OMODFramework.Scripting.dll"
+	VS_DOTNET_REFERENCE_RtfPipe "${CMAKE_BINARY_DIR}/$(Configuration)/RtfPipe.dll"
 	VS_DOTNET_REFERENCES "System.dll;System.Core.dll"
 )
 

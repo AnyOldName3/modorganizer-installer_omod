@@ -1,5 +1,6 @@
 using OMODFramework;
 using OMODFramework.Scripting;
+using RtfPipe;
 
 namespace Dummy
 {
@@ -9,6 +10,7 @@ namespace Dummy
         {
             OMOD omod = null;
             IScriptFunctions scriptFunctions = null;
+            Rtf.ToHtml("");
         }
     }
 }
