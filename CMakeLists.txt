@@ -52,6 +52,7 @@ install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/OMODFramework.dll" DESTINATION
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.dll" DESTINATION "${install_dir}/data")
+install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/RtfPipe.dll" DESTINATION "${install_dir}/data")
 #install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.pdb" DESTINATION pdb)
 install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.pdb" DESTINATION pdb)
 install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.pdb" DESTINATION pdb)
