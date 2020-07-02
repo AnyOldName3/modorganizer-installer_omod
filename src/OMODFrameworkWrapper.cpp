@@ -126,6 +126,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
     return EInstallResult::RESULT_SUCCESS;
   }
+  catch (const std::exception& e)
+  {
+    throw;
+  }
   catch (System::Exception^ dotNetException)
   {
     throw toStdException(dotNetException);
