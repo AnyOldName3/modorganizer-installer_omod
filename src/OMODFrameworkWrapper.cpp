@@ -4,6 +4,8 @@ using namespace cli;
 
 #include <algorithm>
 
+#include <QMessageBox>
+
 #include <imodinterface.h>
 #include <iplugingame.h>
 #include <log.h>
@@ -15,6 +17,8 @@ using namespace cli;
 
 #include "interop/QtDotNetConverters.h"
 #include "interop/StdDotNetConverters.h"
+
+#include "newstuff/rtfPopup.h"
 
 // We want to search the plugin data directory for .NET DLLs
 class AssemblyResolver
@@ -72,8 +76,15 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    if (omod.HasReadme)
-      MOBase::log::debug("{}", toUTF8String(omod.GetReadme()));
+    std::unique_ptr<RtfPopup> readmePopup;
+    // TODO: make localisable
+    if (omod.HasReadme && QMessageBox::question(mParentWidget, "Display Readme?", "The Readme may explain installation options. Display it?<br>It will remain visible until you close it or installation finishes.") == QMessageBox::StandardButton::Yes)
+    {
+      // std::make_unique wouldn't cooperate
+      readmePopup.reset(new RtfPopup(omod.GetReadme(), mParentWidget));
+      readmePopup->setWindowTitle(toQString(omod.ModName) + " Readme");
+      readmePopup->show();
+    }
 
     if (omod.HasScript)
     {
