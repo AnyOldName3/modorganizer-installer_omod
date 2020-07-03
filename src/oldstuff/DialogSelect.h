@@ -14,6 +14,8 @@ std::optional<QVector<int>> DialogSelect(QWidget* parent, const QString& title, 
 // For some reason, this can be resized bigger but not smaller.
 class FixedAspectRatioImageLabel : public QLabel
 {
+  Q_OBJECT
+
 public:
   FixedAspectRatioImageLabel() = default;
 
