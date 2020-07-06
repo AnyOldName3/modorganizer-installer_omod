@@ -76,14 +76,15 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    std::unique_ptr<RtfPopup> readmePopup;
     // TODO: make localisable
-    if (omod.HasReadme && QMessageBox::question(mParentWidget, "Display Readme?", "The Readme may explain installation options. Display it?<br>It will remain visible until you close it or installation finishes.") == QMessageBox::StandardButton::Yes)
+    if (omod.HasReadme && QMessageBox::question(mParentWidget, "Display Readme?", "The Readme may explain installation options. Display it?<br>It will remain visible until you close it.") == QMessageBox::StandardButton::Yes)
     {
-      // std::make_unique wouldn't cooperate
-      readmePopup.reset(new RtfPopup(omod.GetReadme(), mParentWidget));
+      // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
+      // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.
+      RtfPopup* readmePopup = new RtfPopup(omod.GetReadme(), mParentWidget);
       readmePopup->setWindowTitle(toQString(omod.ModName) + " Readme");
       readmePopup->show();
+      readmePopup->setAttribute(Qt::WA_DeleteOnClose);
     }
 
     if (omod.HasScript)

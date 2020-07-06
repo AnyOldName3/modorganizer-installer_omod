@@ -26,4 +26,6 @@ RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) 
   label->setTextInteractionFlags(Qt::TextBrowserInteraction);
   scrollArea->setWidget(label);
   scrollArea->setWidgetResizable(true);
+
+  setSizeGripEnabled(true);
 }
