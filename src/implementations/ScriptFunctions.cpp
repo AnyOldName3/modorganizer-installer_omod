@@ -13,6 +13,7 @@
 #include <log.h>
 
 #include "../interop/QtDotNetConverters.h"
+#include "../newstuff/rtfPopup.h"
 #include "../oldstuff/DialogSelect.h"
 
 ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo) {}
@@ -119,7 +120,9 @@ void ScriptFunctions::DisplayImage(System::String^ path, System::String^ title)
 
 void ScriptFunctions::DisplayText(System::String^ text, System::String^ title)
 {
-  throw gcnew System::NotImplementedException();
+  RtfPopup popup(text, mParentWidget);
+  popup.setWindowTitle(toQString(title));
+  popup.exec();
 }
 
 void ScriptFunctions::Patch(System::String^ from, System::String^ to)
