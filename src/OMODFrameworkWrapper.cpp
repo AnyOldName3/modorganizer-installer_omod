@@ -106,20 +106,31 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
         {
           QString section = toQString(edit->Section);
+          section = section.mid(1, section.size() - 2);
           QString name = toQString(edit->Name);
           QString newValue = toQString(edit->NewValue);
+          QString oldValue;
+          if (edit->OldValue)
+            oldValue = toQString(edit->OldValue);
+          else
+          {
+            // I'm pretty sure this is the maximum length for vanilla Oblivion.
+            wchar_t buffer[256];
+            if (GetPrivateProfileString(section.toStdWString().data(), name.toStdWString().data(), nullptr, buffer, sizeof(buffer) / sizeof(buffer[0]), oblivionIniPath.toStdWString().data()))
+              oldValue = QString::fromWCharArray(buffer);
+          }
 
-          MOBase::log::debug("OMOD wants to set {} {} to \"{}\", was \"{}\"", section, name, newValue, toUTF8String(edit->OldValue));
+          MOBase::log::debug("OMOD wants to set [{}] {} to \"{}\", was \"{}\"", section, name, newValue, oldValue);
 
           QMessageBox::StandardButton response;
           if (!yesToAll)
           {
             QString message;
             // TODO: make localisable
-            if (edit->OldValue)
-              message = QString("%1 wants to change %2 %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(toQString(edit->OldValue)).arg(newValue);
+            if (!oldValue.isNull() && !oldValue.isEmpty())
+              message = QString("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
             else
-              message = QString("%1 wants to set %2 %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+              message = QString("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
 
             response = QMessageBox::question(mParentWidget, "Update INI?", message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
             if (response == QMessageBox::NoToAll)
@@ -134,7 +145,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           if (yesToAll || response == QMessageBox::StandardButton::Yes)
           {
             MOBase::log::debug("Doing edit.");
-            MOBase::WriteRegistryValue(section.mid(1, section.size() - 2).toStdWString().data(), name.toStdWString().data(), newValue.toStdWString().data(), oblivionIniPath.toStdWString().data());
+            MOBase::WriteRegistryValue(section.toStdWString().data(), name.toStdWString().data(), newValue.toStdWString().data(), oblivionIniPath.toStdWString().data());
           }
           else
             MOBase::log::debug("User skipped edit.");
