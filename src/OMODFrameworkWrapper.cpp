@@ -10,6 +10,7 @@ using namespace cli;
 #include <iplugingame.h>
 #include <log.h>
 #include <utility.h>
+#include <registry.h>
 
 #include "implementations/CodeProgress.h"
 #include "implementations/Logger.h"
@@ -97,6 +98,49 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       if (scriptData->CancelInstall)
         return EInstallResult::RESULT_CANCELED;
 
+      // inis first so that you don't need to wait for extraction before a second batch of questions appears
+      if (scriptData->INIEdits && scriptData->INIEdits->Count)
+      {
+        QString oblivionIniPath = (mMoInfo->profile()->localSettingsEnabled() ? QDir(mMoInfo->profile()->absolutePath()) : mMoInfo->managedGame()->documentsDirectory()).absoluteFilePath("Oblivion.ini");
+        bool yesToAll = false;
+        for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
+        {
+          QString section = toQString(edit->Section);
+          QString name = toQString(edit->Name);
+          QString newValue = toQString(edit->NewValue);
+
+          MOBase::log::debug("OMOD wants to set {} {} to \"{}\", was \"{}\"", section, name, newValue, toUTF8String(edit->OldValue));
+
+          QMessageBox::StandardButton response;
+          if (!yesToAll)
+          {
+            QString message;
+            // TODO: make localisable
+            if (edit->OldValue)
+              message = QString("%1 wants to change %2 %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(toQString(edit->OldValue)).arg(newValue);
+            else
+              message = QString("%1 wants to set %2 %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+
+            response = QMessageBox::question(mParentWidget, "Update INI?", message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+            if (response == QMessageBox::NoToAll)
+            {
+              MOBase::log::debug("User skipped all.");
+              break;
+            }
+
+            yesToAll |= response == QMessageBox::YesToAll;
+          }
+
+          if (yesToAll || response == QMessageBox::StandardButton::Yes)
+          {
+            MOBase::log::debug("Doing edit.");
+            MOBase::WriteRegistryValue(section.mid(1, section.size() - 2).toStdWString().data(), name.toStdWString().data(), newValue.toStdWString().data(), oblivionIniPath.toStdWString().data());
+          }
+          else
+            MOBase::log::debug("User skipped edit.");
+        }
+      }
+
       scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
       for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
       {
@@ -104,6 +148,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         System::IO::Directory::CreateDirectory(System::IO::Path::GetDirectoryName(destinationPath));
         System::IO::File::Copy(file.InstallFrom, destinationPath, true);
       }
+      // TODO: the rest of the script return data.
     }
     else
     {
