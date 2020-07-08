@@ -127,7 +127,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           {
             QString message;
             // TODO: make localisable
-            if (!oldValue.isNull() && !oldValue.isEmpty())
+            if (!oldValue.isEmpty())
               message = QString("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
             else
               message = QString("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
@@ -164,23 +164,23 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     else
     {
       MOBase::log::debug("Mod has no script. Install contents directly.");
-      System::String^ data = omod.GetDataFiles();
-      System::String^ plugins = omod.GetPlugins();
-      if (data)
+      QString data = toQString(omod.GetDataFiles());
+      QString plugins = toQString(omod.GetPlugins());
+      if (!data.isNull())
       {
-        if (MOBase::shellMove(toQString(data) + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+        if (MOBase::shellMove(data + "/*.*", modInterface->absolutePath(), true, mParentWidget))
           MOBase::log::debug("Installed mod files.");
         else
           MOBase::log::error("Error while installing mod files.");
-        QFile::remove(toQString(data));
+        QFile::remove(data);
       }
-      if (plugins)
+      if (!plugins.isNull())
       {
-        if (MOBase::shellMove(toQString(plugins) + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+        if (MOBase::shellMove(plugins + "/*.*", modInterface->absolutePath(), true, mParentWidget))
           MOBase::log::debug("Installed mod plugins.");
         else
           MOBase::log::error("Error while installing mod plugins.");
-        QFile::remove(toQString(plugins));
+        QFile::remove(plugins);
       }
     }
 
