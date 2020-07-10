@@ -13,7 +13,7 @@ public:
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
 protected:
-  void initFrameworkSettings();
+  void initFrameworkSettings(const QString& tempPath);
 
 private:
   MOBase::IOrganizer* mMoInfo;

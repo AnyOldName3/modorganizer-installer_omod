@@ -5,6 +5,7 @@ using namespace cli;
 #include <algorithm>
 
 #include <QMessageBox>
+#include <QTemporaryDir>
 
 #include <imodinterface.h>
 #include <iplugingame.h>
@@ -65,7 +66,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 {
   try
   {
-    initFrameworkSettings();
+    QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
+    initFrameworkSettings(tempPath.path());
     MOBase::log::debug("Installing {} as OMOD", archiveName);
     // Stack allocating should dispose like a `using` statement in C#
     OMODFramework::OMOD omod(toDotNetString(archiveName));
@@ -204,9 +206,12 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   }
 }
 
-void OMODFrameworkWrapper::initFrameworkSettings()
+void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
 {
   OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress();
+
+  if (!tempPath.isEmpty())
+    OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);
 
   OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
   loggingSettings->UseLogger = true;
