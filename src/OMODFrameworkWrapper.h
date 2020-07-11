@@ -1,10 +1,14 @@
 #pragma once
 
+#include <QCoreApplication>
+
 #include <iplugininstaller.h>
 
 // Avoid tempting fate by avoiding letting MOC and C++/CLI see the same files
 class OMODFrameworkWrapper
 {
+  Q_DECLARE_TR_FUNCTIONS(OMODFrameworkWrapper)
+
 public:
   using EInstallResult = MOBase::IPluginInstaller::EInstallResult;
 

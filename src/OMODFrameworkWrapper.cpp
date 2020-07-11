@@ -79,13 +79,15 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    // TODO: make localisable
-    if (omod.HasReadme && QMessageBox::question(mParentWidget, "Display Readme?", "The Readme may explain installation options. Display it?<br>It will remain visible until you close it.") == QMessageBox::StandardButton::Yes)
+    if (omod.HasReadme && QMessageBox::question(mParentWidget, tr("Display Readme?"),
+      //: <br> is a line break. Translators can remove it if it makes things clearer.
+      tr("The Readme may explain installation options. Display it?<br>It will remain visible until you close it.")) == QMessageBox::StandardButton::Yes)
     {
       // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
       // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.
       RtfPopup* readmePopup = new RtfPopup(omod.GetReadme(), mParentWidget);
-      readmePopup->setWindowTitle(toQString(omod.ModName) + " Readme");
+      //: %1 is the mod name
+      readmePopup->setWindowTitle(tr("%1 Readme").arg(toQString(omod.ModName)));
       readmePopup->show();
       readmePopup->setAttribute(Qt::WA_DeleteOnClose);
     }
@@ -128,13 +130,27 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           if (!yesToAll)
           {
             QString message;
-            // TODO: make localisable
             if (!oldValue.isEmpty())
-              message = QString("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
+            {
+              /*: %1 is the mod name
+                  [%2] is the ini section name.
+                  %3 is the ini setting name.
+                  %4 is the value already in Oblivion.ini.
+                  %5 is the value the mod wants to set.
+              */
+              message = tr("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
+            }
             else
-              message = QString("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+            {
+              /*: %1 is the mod name
+                  [%2] is the ini section name.
+                  %3 is the ini setting name.
+                  %5 is the value the mod wants to set.
+              */
+              message = tr("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+            }
 
-            response = QMessageBox::question(mParentWidget, "Update INI?", message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+            response = QMessageBox::question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
             if (response == QMessageBox::NoToAll)
             {
               MOBase::log::debug("User skipped all.");
@@ -172,13 +188,16 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
       if (installedPlugins->Count && scriptData->UncheckedPlugins && scriptData->UncheckedPlugins->Count)
       {
-        // TODO: make localisable
-        QString message("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
+        /*: %1 is the mod name
+            <ul><li>%2</li></ul> becomes a list of ESPs and ESMs the OMOD installed and tried to activate.
+            <ul><li>%3</li></ul> becomes a list of ESPs and ESMs the OMOD installed avoided activating.
+            The point of this popup is to suggest which plugins the user might need to activate themselves.
+        */
+        QString message = tr("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
         message = message.arg(toQString(omod.ModName));
         message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
         message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
-        // TODO: make localisable
-        QMessageBox::information(mParentWidget, "OMOD didn't activate all plugins", message);
+        QMessageBox::information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
       }
 
       // TODO: the rest of the script return data.
