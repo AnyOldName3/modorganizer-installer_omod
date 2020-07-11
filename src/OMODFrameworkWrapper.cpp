@@ -155,12 +155,32 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       }
 
       scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
+      // no compatability between auto and var makes me :angery:
+      System::Collections::Generic::HashSet<System::String^>^ installedPlugins = gcnew System::Collections::Generic::HashSet<System::String^>(System::StringComparer::InvariantCultureIgnoreCase);
       for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
       {
         System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), file.InstallTo);
         System::IO::Directory::CreateDirectory(System::IO::Path::GetDirectoryName(destinationPath));
         System::IO::File::Copy(file.InstallFrom, destinationPath, true);
+        System::String^ extension = System::IO::Path::GetExtension(file.InstallTo);
+        if (extension && (extension->Equals(".esm", System::StringComparison::InvariantCultureIgnoreCase) || extension->Equals(".esp", System::StringComparison::InvariantCultureIgnoreCase)))
+          installedPlugins->Add(file.InstallTo);
       }
+
+      if (scriptData->UncheckedPlugins)
+        installedPlugins->ExceptWith(scriptData->UncheckedPlugins);
+
+      if (installedPlugins->Count && scriptData->UncheckedPlugins && scriptData->UncheckedPlugins->Count)
+      {
+        // TODO: make localisable
+        QString message("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
+        message = message.arg(toQString(omod.ModName));
+        message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
+        message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
+        // TODO: make localisable
+        QMessageBox::information(mParentWidget, "OMOD didn't activate all plugins", message);
+      }
+
       // TODO: the rest of the script return data.
     }
     else
