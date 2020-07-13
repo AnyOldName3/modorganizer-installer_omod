@@ -4,12 +4,13 @@
 #include <QLabel>
 #include <QRegularExpression>
 #include <QScrollArea>
+#include <QTextDocument>
 
 #include "../interop/QtDotNetConverters.h"
 
 RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) : QDialog(parent, f)
 {
-  QString text = toQString(rtfText->StartsWith("{\\rtf") ? RtfPipe::Rtf::ToHtml(rtfText) : rtfText);
+  QString text = rtfText->StartsWith("{\\rtf") ? toQString(RtfPipe::Rtf::ToHtml(rtfText)) : Qt::convertFromPlainText(toQString(rtfText), Qt::WhiteSpaceNormal);
   QRegularExpression urlFinder(R"REGEX((?<!(?:href="))((?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;)*\)|[-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;))*(?:\([-A-Z0-9+@#/%=~+|$?!:,.]|(?:&amp;)*\)|[A-Z0-9+@#/%=~_|$]|(?:&amp;))))REGEX", QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption);
   text.replace(urlFinder, R"(<a href="\1">\1</a>)");
 
@@ -22,6 +23,7 @@ RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) 
 
   QLabel* label = new QLabel(text, scrollArea);
   label->setWordWrap(true);
+  label->setTextFormat(Qt::RichText);
   label->setOpenExternalLinks(true);
   label->setTextInteractionFlags(Qt::TextBrowserInteraction);
   scrollArea->setWidget(label);
