@@ -105,15 +105,15 @@ std::optional<QVector<int>> DialogSelect(
   QDialog d(parent);
   d.setWindowTitle(title);
 
-  auto* mainLayout = new QVBoxLayout;
+  auto* mainLayout = new QVBoxLayout(&d);
   d.setLayout(mainLayout);
 
-  auto* splitter = new QSplitter;
+  auto* splitter = new QSplitter(&d);
   mainLayout->addWidget(splitter);
 
   // button box
   auto* buttons = new QDialogButtonBox(
-    QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
+    QDialogButtonBox::Ok|QDialogButtonBox::Cancel, &d);
 
   /* QObject::connect: signal not found in QDialogButtonBox
      even though this worked with my initial attempt.
@@ -134,11 +134,11 @@ std::optional<QVector<int>> DialogSelect(
 
 
   // left panel
-  auto* left = new QWidget;
+  auto* left = new QWidget(splitter);
   auto* leftLayout = new QVBoxLayout(left);
   leftLayout->setContentsMargins(0, 0, 0, 0);
 
-  auto* stack = new QStackedWidget;
+  auto* stack = new QStackedWidget(left);
   leftLayout->addWidget(stack);
 
   // don't put descriptions of pixmaps at all if there aren't any
@@ -147,12 +147,12 @@ std::optional<QVector<int>> DialogSelect(
 
   // for each description/item
   for (int i=0; i < std::max(descriptions.size(), pixmaps.size()); ++i) {
-    auto* panel = new QWidget;
+    auto* panel = new QWidget(left);
     auto* panelLayout = new QVBoxLayout(panel);
     //panelLayout->setContentsMargins(0, 0, 0, 0);
 
     if (hasPixmaps) {
-      auto* pixmapLabel = new FixedAspectRatioImageLabel;
+      auto* pixmapLabel = new FixedAspectRatioImageLabel(panel);
 
       pixmapLabel->setFrameStyle(QFrame::StyledPanel);
       pixmapLabel->setLineWidth(1);
@@ -182,7 +182,7 @@ std::optional<QVector<int>> DialogSelect(
     if (hasDescriptions)
     {
       // description under pixmap (if any)
-      auto* description = new QPlainTextEdit(descriptions[i]);
+      auto* description = new QPlainTextEdit(descriptions[i], panel);
 
       // this puts the description on top if there's no pixmap
       //description->setAlignment(Qt::AlignLeft|Qt::AlignTop);
@@ -201,12 +201,12 @@ std::optional<QVector<int>> DialogSelect(
 
 
   // right panel
-  auto* right = new QWidget;
+  auto* right = new QWidget(&d);
   auto* rightLayout = new QVBoxLayout(right);
   rightLayout->setContentsMargins(0, 0, 0, 0);
 
   // title
-  auto* titleLabel = new QLabel(title);
+  auto* titleLabel = new QLabel(title, right);
   titleLabel->setWordWrap(true);
   rightLayout->addWidget(titleLabel);
 
@@ -234,9 +234,9 @@ std::optional<QVector<int>> DialogSelect(
     }
 
     if (multiSelect) {
-      w = new HoverableWidget<CheckBoxWordWrap, const QString&>(labelText, [=]{ onHover(i); });
+      w = new HoverableWidget<CheckBoxWordWrap, const QString&, QWidget*>(labelText, right, [=]{ onHover(i); });
     } else {
-      w = new HoverableWidget<RadioButtonWordWrap, const QString&>(labelText, [=]{ onHover(i); });
+      w = new HoverableWidget<RadioButtonWordWrap, const QString&, QWidget*>(labelText, right, [=]{ onHover(i); });
       checked |= i == 0;
     }
 
