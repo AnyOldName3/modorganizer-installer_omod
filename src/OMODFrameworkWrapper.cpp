@@ -252,6 +252,9 @@ void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
   if (!tempPath.isEmpty())
     OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);
 
+  // This is a hack to fix an OMOD framework bug and should be removed once it's fixed.
+  OMODFramework::Framework::Settings->DllPath = System::IO::Path::Combine(System::IO::Path::GetDirectoryName(OMODFramework::Framework::Settings->DllPath), "OMODFramework.Scripting.dll");
+
   OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
   loggingSettings->UseLogger = true;
   loggingSettings->LogToFile = false;
