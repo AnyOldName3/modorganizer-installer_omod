@@ -200,7 +200,29 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         QMessageBox::information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
       }
 
-      // TODO: the rest of the script return data.
+      std::map<QString, int> unhandledScriptReturnDataCounts;
+      unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
+      unhandledScriptReturnDataCounts["EarlyPlugins"] = scriptData->EarlyPlugins ? scriptData->EarlyPlugins->Count : 0;
+      unhandledScriptReturnDataCounts["LoadOrderSet"] = scriptData->LoadOrderSet ? scriptData->LoadOrderSet->Count : 0;
+      unhandledScriptReturnDataCounts["ConflictsWith"] = scriptData->ConflictsWith ? scriptData->ConflictsWith->Count : 0;
+      unhandledScriptReturnDataCounts["DependsOn"] = scriptData->DependsOn ? scriptData->DependsOn->Count : 0;
+
+      unhandledScriptReturnDataCounts["RegisterBSASet"] = scriptData->RegisterBSASet ? scriptData->RegisterBSASet->Count : 0;
+      unhandledScriptReturnDataCounts["SDPEdits"] = scriptData->SDPEdits ? scriptData->SDPEdits->Count : 0;
+      unhandledScriptReturnDataCounts["ESPEdits"] = scriptData->ESPEdits ? scriptData->ESPEdits->Count : 0;
+      unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
+
+      for (const auto& unhandledThing : unhandledScriptReturnDataCounts)
+      {
+        if (unhandledThing.second)
+        {
+          QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
+          userMessage = userMessage.arg(toQString(omod.ModName));
+          userMessage = userMessage.arg(unhandledThing.first);
+          QMessageBox::warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
+          MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
+        }
+      }
     }
     else
     {
