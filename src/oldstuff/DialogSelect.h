@@ -16,12 +16,16 @@ class FixedAspectRatioImageLabel : public QLabel
 {
   Q_OBJECT
 
+  Q_PROPERTY(QPixmap unscaledPixmap READ unscaledPixmap WRITE setUnscaledPixmap)
+
 public:
   FixedAspectRatioImageLabel() = default;
 
   FixedAspectRatioImageLabel(QWidget* parent);
 
   void setUnscaledPixmap(const QPixmap& pixmap);
+
+  const QPixmap& unscaledPixmap() const;
 
   QSize sizeHint() const override;
 

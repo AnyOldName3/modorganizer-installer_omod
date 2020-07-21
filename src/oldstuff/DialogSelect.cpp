@@ -9,6 +9,7 @@
 #include <QImageReader>
 #include <QPlainTextEdit>
 #include <QRadioButton>
+#include <QScrollArea>
 #include <QSplitter>
 #include <QStackedWidget>
 #include <QVBoxLayout>
@@ -49,17 +50,19 @@ void FixedAspectRatioImageLabel::setUnscaledPixmap(const QPixmap& pixmap)
   copySizeLabel.setPixmap(pixmap);
 }
 
+const QPixmap& FixedAspectRatioImageLabel::unscaledPixmap() const
+{
+    return mUnscaledPixmap;
+}
+
 QSize FixedAspectRatioImageLabel::sizeHint() const
 {
-  qDebug() << "sizeHint() QLabel::sizeHint() =" << QLabel::sizeHint() << ", mUnscaledPixmap.size()" << mUnscaledPixmap.size();
   if (mUnscaledPixmap.isNull())
   {
-    qDebug("Top");
     return QLabel::sizeHint();
   }
   else
   {
-    qDebug("Bottom");
     // maybe should add frame border
     return mUnscaledPixmap.size();
     //return copySizeLabel.sizeHint();
@@ -85,14 +88,11 @@ int FixedAspectRatioImageLabel::widthForHeight(int height) const
 void FixedAspectRatioImageLabel::resizeEvent(QResizeEvent* resizeEvent)
 {
   QLabel::resizeEvent(resizeEvent);
-  qDebug() << "rect size" << rect().size() << ", frameRect size" << frameRect().size() << ", contentsRect" << contentsRect().size();
   rescalePixmap(contentsRect().size());
 }
 
 void FixedAspectRatioImageLabel::rescalePixmap(const QSize& size)
 {
-  qDebug() << "Resizing to" << size;
-  qDebug() << "Margin is" << margin();
   setPixmap(mUnscaledPixmap.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 }
 
