@@ -75,6 +75,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!System::String::IsNullOrEmpty(omod.ModName))
       modName.update(toQString(omod.ModName), MOBase::EGuessQuality::GUESS_META);
 
+    // TODO: let user rename mod
+
     MOBase::IModInterface* modInterface = mMoInfo->createMod(modName);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
