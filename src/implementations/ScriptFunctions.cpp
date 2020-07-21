@@ -133,13 +133,13 @@ void ScriptFunctions::Patch(System::String^ from, System::String^ to)
 System::String^ ScriptFunctions::ReadOblivionINI(System::String^ section, System::String^ name)
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. OMODFramework should be handling this for us.
 }
 
 System::String^ ScriptFunctions::ReadRendererInfo(System::String^ name)
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. OMODFramework should be handling this for us.
 }
 
 bool ScriptFunctions::DataFileExists(System::String^ path)
@@ -201,23 +201,23 @@ System::Collections::Generic::IEnumerable<OMODFramework::Scripting::ScriptESP>^ 
 System::Collections::Generic::IEnumerable<System::String^>^ ScriptFunctions::GetActiveOMODNames()
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. No known OMODs seem to actually use this (which is irritating as this is one of OBMM's most powerful features).
 }
 
 cli::array<unsigned char, 1>^ ScriptFunctions::ReadExistingDataFile(System::String^ file)
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. OMODFramework should be handling this for us.
 }
 
 cli::array<unsigned char, 1>^ ScriptFunctions::GetDataFileFromBSA(System::String^ file)
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. OMODFramework should be handling this for us.
 }
 
 cli::array<unsigned char, 1>^ ScriptFunctions::GetDataFileFromBSA(System::String^ bsa, System::String^ file)
 {
   throw gcnew System::NotImplementedException();
-  // TODO: insert return statement here
+  // TODO: implement this if a user ever reports the exception. OMODFramework should be handling this for us.
 }
