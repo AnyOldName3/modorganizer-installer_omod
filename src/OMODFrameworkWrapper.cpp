@@ -216,6 +216,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       {
         if (unhandledThing.second)
         {
+          /*: %1 is the mod name
+              %2 is the name of a field in the OMOD's return data
+              Hopefully this message will never be seen by anyone, but if it is, they need to know to tell the Mod Organizer 2 dev team.
+          */
           QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
           userMessage = userMessage.arg(toQString(omod.ModName));
           userMessage = userMessage.arg(unhandledThing.first);

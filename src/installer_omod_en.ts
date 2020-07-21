@@ -61,5 +61,16 @@
         <source>OMOD didn&apos;t activate all plugins</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="223"/>
+        <source>%1 has data for %2, but Mod Organizer 2 doesn&apos;t know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn&apos;t find any OMODs that actually did this, and we need to know that they exist.</source>
+        <extracomment>%1 is the mod name %2 is the name of a field in the OMOD&apos;s return data Hopefully this message will never be seen by anyone, but if it is, they need to know to tell the Mod Organizer 2 dev team.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="226"/>
+        <source>Mod Organizer 2 can&apos;t completely install this OMOD.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 </TS>
