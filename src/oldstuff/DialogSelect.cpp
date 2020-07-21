@@ -202,13 +202,43 @@ std::optional<QVector<int>> DialogSelect(
 
   // right panel
   auto* right = new QWidget(&d);
-  auto* rightLayout = new QVBoxLayout(right);
-  rightLayout->setContentsMargins(0, 0, 0, 0);
+  auto* rightOuterLayout = new QVBoxLayout(right);
+  rightOuterLayout->setContentsMargins(0, 0, 0, 0);
 
   // title
   auto* titleLabel = new QLabel(title, right);
   titleLabel->setWordWrap(true);
-  rightLayout->addWidget(titleLabel);
+  rightOuterLayout->addWidget(titleLabel);
+
+  QWidget* rightInner;
+  QBoxLayout* rightInnerLayout;
+
+  // Doing this unconditionally breaks HGEC lower body choices.
+  // Somehow the fixed aspect ratio image label forces the scroll area to be resized below its preferred size.
+  // Because the word wrapped radio buttons aren't good at telling Qt their size hint is only minimal for the current width,
+  // the layout ends up with their preferred width as its minimum and won't let itself be shrunk smaller than that even though you can't see the right hand side.
+  // This means that as they're in a widget with enough space, the text isn't wrapped.
+  // The exact same behaviour happens with non-wrappable radio buttons, but it's more expected.
+  // Making the fixed aspect ratio image label play nicely with being shrunk will probably fix this.
+  // It only seems to be MEAT that actually needs a scrollbar, though, and that looks fine, so fixing this mess is left as an exercise for the reader.
+  if (items.size() >= 10)
+  {
+    QScrollArea* rightScrollArea = new QScrollArea(right);
+    rightOuterLayout->addWidget(rightScrollArea);
+    rightScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    rightScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    rightInner = new QWidget(right);
+    rightScrollArea->setWidget(rightInner);
+    rightScrollArea->setWidgetResizable(true);
+    
+    rightInnerLayout = new QVBoxLayout(rightInner);
+  }
+  else
+  {
+    rightInner = right;
+    rightInnerLayout = rightOuterLayout;
+  }
 
   // callback when hovering
   auto onHover = [&](int i) {
@@ -234,19 +264,19 @@ std::optional<QVector<int>> DialogSelect(
     }
 
     if (multiSelect) {
-      w = new HoverableWidget<CheckBoxWordWrap, const QString&, QWidget*>(labelText, right, [=]{ onHover(i); });
+      w = new HoverableWidget<CheckBoxWordWrap, const QString&, QWidget*>(labelText, rightInner, [=]{ onHover(i); });
     } else {
-      w = new HoverableWidget<RadioButtonWordWrap, const QString&, QWidget*>(labelText, right, [=]{ onHover(i); });
+      w = new HoverableWidget<RadioButtonWordWrap, const QString&, QWidget*>(labelText, rightInner, [=]{ onHover(i); });
       checked |= i == 0;
     }
 
-    rightLayout->addWidget(w);
+    rightInnerLayout->addWidget(w);
     itemButtons.push_back(w);
     w->setChecked(checked);
   }
 
   // push all the items to the top
-  rightLayout->addStretch(1);
+  rightInnerLayout->addStretch(1);
 
   splitter->addWidget(left);
   splitter->addWidget(right);
