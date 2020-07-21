@@ -285,7 +285,7 @@ std::optional<QVector<int>> DialogSelect(
   d.resize(800, 500);
 
   if (d.exec() != QDialog::Accepted) {
-    return {};
+    return std::nullopt;
   }
 
 
