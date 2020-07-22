@@ -42,6 +42,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # C++/CLI doesn't support two-phase lookup yet
 target_compile_options(${PROJECT_NAME} PRIVATE "/Zc:twoPhase-")
 
+# OMODFramework and OMODFramework.Scripting reference different .NET standard libraries. This generates warnings when using them together.
+target_compile_options(${PROJECT_NAME} PRIVATE "/wd4691")
+
 # We don't want ERROR defined
 target_compile_definitions(${PROJECT_NAME} PRIVATE "NOGDI")
 
