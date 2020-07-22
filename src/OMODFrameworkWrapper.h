@@ -14,6 +14,8 @@ public:
 
   OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidget* parentWidget);
 
+  EInstallResult installInAnotherThread(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
+
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
 protected:

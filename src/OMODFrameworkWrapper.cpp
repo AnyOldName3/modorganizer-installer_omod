@@ -62,6 +62,96 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
   AssemblyResolver::initialise(mMoInfo);
 }
 
+ref class InstallInAnotherThreadHelper
+{
+public:
+  InstallInAnotherThreadHelper(OMODFrameworkWrapper* owner, MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
+    : mModName(&modName)
+    , mGameName(&gameName)
+    , mArchiveName(&archiveName)
+    , mVersion(&version)
+    , mNexusID(nexusID)
+    , mOwner(owner)
+    , mExceptionPtr(new std::exception_ptr)
+    , mHasResult(false)
+  {}
+
+  ~InstallInAnotherThreadHelper()
+  {
+    if (!mExceptionPtr)
+      return;
+
+    this->!InstallInAnotherThreadHelper();
+  }
+
+  !InstallInAnotherThreadHelper()
+  {
+    delete mExceptionPtr;
+    mExceptionPtr = nullptr;
+  }
+
+  void Run()
+  {
+    try
+    {
+      mResult = mOwner->install(*mModName, *mGameName, *mArchiveName, *mVersion, mNexusID);
+      mHasResult = true;
+    }
+    catch (...)
+    {
+      *mExceptionPtr = std::current_exception();
+    }
+  }
+
+  bool HasResult()
+  {
+    return mHasResult;
+  }
+
+  OMODFrameworkWrapper::EInstallResult Result()
+  {
+    return mResult;
+  }
+
+  std::exception_ptr ExceptionPtr()
+  {
+    return *mExceptionPtr;
+  }
+
+private:
+  // We own none of these pointers. They're pointers because managed objects can't have unmanaged members, but a pointer is just an integer of some form, which is the same.
+  MOBase::GuessedValue<QString>* mModName;
+  QString* mGameName;
+  const QString* mArchiveName;
+  const QString* mVersion;
+  int mNexusID;
+
+  OMODFrameworkWrapper* mOwner;
+
+  std::exception_ptr* mExceptionPtr;
+  OMODFrameworkWrapper::EInstallResult mResult;
+  bool mHasResult;
+};
+
+OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::installInAnotherThread(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
+{
+  QEventLoop eventLoop;
+  InstallInAnotherThreadHelper^ helper = gcnew InstallInAnotherThreadHelper(this, modName, gameName, archiveName, version, nexusID);
+  System::Threading::Tasks::Task^ installationTask = System::Threading::Tasks::Task::Run(gcnew System::Action(helper, &InstallInAnotherThreadHelper::Run));
+
+  // TODO: connect stuff to eventLoop.wakeUp.
+  // Installation manager does this with futureWatcher.finished and progressUpdate
+  while (!installationTask->IsCompleted)
+    eventLoop.processEvents(QEventLoop::AllEvents | QEventLoop::WaitForMoreEvents);
+
+  if (helper->HasResult())
+    return helper->Result();
+  else if (helper->ExceptionPtr())
+    std::rethrow_exception(helper->ExceptionPtr());
+  else
+    throw std::runtime_error("Something went horribly wrong when asynchronously installing an OMOD. We don't even have the original exception.");
+}
+
 OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
 {
   try
@@ -77,11 +167,16 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
     // TODO: let user rename mod
 
+    // temp removal
+    if (auto oldInterface = mMoInfo->getMod(modName))
+      mMoInfo->removeMod(oldInterface);
+
     MOBase::IModInterface* modInterface = mMoInfo->createMod(modName);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    if (omod.HasReadme && QMessageBox::question(mParentWidget, tr("Display Readme?"),
+    // temp false
+    if (false && omod.HasReadme && QMessageBox::question(mParentWidget, tr("Display Readme?"),
       //: <br> is a line break. Translators can remove it if it makes things clearer.
       tr("The Readme may explain installation options. Display it?<br>It will remain visible until you close it.")) == QMessageBox::StandardButton::Yes)
     {

@@ -87,5 +87,5 @@ std::set<QString> InstallerOMOD::supportedExtensions() const
 InstallerOMOD::EInstallResult InstallerOMOD::install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
 {
   OMODFrameworkWrapper omodInstaller(mMoInfo, parentWidget());
-  return omodInstaller.install(modName, gameName, archiveName, version, nexusID);
+  return omodInstaller.installInAnotherThread(modName, gameName, archiveName, version, nexusID);
 }
