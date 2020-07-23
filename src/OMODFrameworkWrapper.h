@@ -23,8 +23,12 @@ protected:
 signals:
   void createMod(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
 
+  void displayReadme(const QString& modName, const QString& readme);
+
 protected slots:
   void createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
+
+  void displayReadmeSlot(const QString& modName, const QString& readme);
 
 private:
   MOBase::IOrganizer* mMoInfo;

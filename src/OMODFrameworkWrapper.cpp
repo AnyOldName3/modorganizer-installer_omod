@@ -62,6 +62,7 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
   AssemblyResolver::initialise(mMoInfo);
 
   connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
+  connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
 }
 
 ref class InstallInAnotherThreadHelper
@@ -174,19 +175,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    // temp false
-    if (false && omod.HasReadme && QMessageBox::question(mParentWidget, tr("Display Readme?"),
-      //: <br> is a line break. Translators can remove it if it makes things clearer.
-      tr("The Readme may explain installation options. Display it?<br>It will remain visible until you close it.")) == QMessageBox::StandardButton::Yes)
-    {
-      // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
-      // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.
-      RtfPopup* readmePopup = new RtfPopup(omod.GetReadme(), mParentWidget);
-      //: %1 is the mod name
-      readmePopup->setWindowTitle(tr("%1 Readme").arg(toQString(omod.ModName)));
-      readmePopup->show();
-      readmePopup->setAttribute(Qt::WA_DeleteOnClose);
-    }
+    if (omod.HasReadme)
+      emit displayReadme(toQString(omod.ModName), toQString(omod.GetReadme()));
 
     if (omod.HasScript)
     {
@@ -401,4 +391,20 @@ void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
 void OMODFrameworkWrapper::createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut)
 {
   modInterfaceOut = mMoInfo->createMod(modName);
+}
+
+void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QString& readme)
+{
+  if (QMessageBox::question(mParentWidget, tr("Display Readme?"),
+    //: <br> is a line break. Translators can remove it if it makes things clearer.
+    tr("The Readme may explain installation options. Display it?<br>It will remain visible until you close it.")) == QMessageBox::StandardButton::Yes)
+  {
+    // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
+    // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.
+    RtfPopup* readmePopup = new RtfPopup(toDotNetString(readme), mParentWidget);
+    //: %1 is the mod name
+    readmePopup->setWindowTitle(tr("%1 Readme").arg(modName));
+    readmePopup->show();
+    readmePopup->setAttribute(Qt::WA_DeleteOnClose);
+  }
 }
