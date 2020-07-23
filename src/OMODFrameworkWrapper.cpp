@@ -4,7 +4,6 @@ using namespace cli;
 
 #include <algorithm>
 
-#include <QMessageBox>
 #include <QTemporaryDir>
 
 #include <imodinterface.h>
@@ -63,6 +62,11 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
 
   connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
+
+  connect(this, &OMODFrameworkWrapper::criticalMessageBox, this, &OMODFrameworkWrapper::criticalMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
+  connect(this, &OMODFrameworkWrapper::informationMessageBox, this, &OMODFrameworkWrapper::informationMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
+  connect(this, &OMODFrameworkWrapper::questionMessageBox, this, &OMODFrameworkWrapper::questionMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
+  connect(this, &OMODFrameworkWrapper::warningMessageBox, this, &OMODFrameworkWrapper::warningMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
 }
 
 ref class InstallInAnotherThreadHelper
@@ -236,7 +240,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
               message = tr("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
             }
 
-            response = QMessageBox::question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+            emit questionMessageBox(response, mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
             if (response == QMessageBox::NoToAll)
             {
               MOBase::log::debug("User skipped all.");
@@ -283,7 +287,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         message = message.arg(toQString(omod.ModName));
         message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
         message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
-        QMessageBox::information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
+        emit informationMessageBox(unused_out(QMessageBox::StandardButton()), mParentWidget, tr("OMOD didn't activate all plugins"), message);
       }
 
       std::map<QString, int> unhandledScriptReturnDataCounts;
@@ -309,7 +313,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
           userMessage = userMessage.arg(toQString(omod.ModName));
           userMessage = userMessage.arg(unhandledThing.first);
-          QMessageBox::warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
+          emit warningMessageBox(unused_out(QMessageBox::StandardButton()), mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
           MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
         }
       }
@@ -407,4 +411,24 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
     readmePopup->show();
     readmePopup->setAttribute(Qt::WA_DeleteOnClose);
   }
+}
+
+void OMODFrameworkWrapper::criticalMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
+{
+  standardButtonOut = QMessageBox::critical(parent, title, text, buttons, defaultButton);
+}
+
+void OMODFrameworkWrapper::informationMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
+{
+  standardButtonOut = QMessageBox::information(parent, title, text, buttons, defaultButton);
+}
+
+void OMODFrameworkWrapper::questionMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
+{
+  standardButtonOut = QMessageBox::question(parent, title, text, buttons, defaultButton);
+}
+
+void OMODFrameworkWrapper::warningMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton)
+{
+  standardButtonOut = QMessageBox::warning(parent, title, text, buttons, defaultButton);
 }
