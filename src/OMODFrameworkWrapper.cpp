@@ -171,7 +171,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     // TODO: let user rename mod
 
     MOBase::IModInterface* modInterface;
-    emit createMod(modName, modInterface);
+    emit createMod(modInterface, modName);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
@@ -388,7 +388,7 @@ void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
   OMODFramework::Framework::Settings->ScriptExecutionSettings = scriptSettings;
 }
 
-void OMODFrameworkWrapper::createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut)
+void OMODFrameworkWrapper::createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName)
 {
   modInterfaceOut = mMoInfo->createMod(modName);
 }

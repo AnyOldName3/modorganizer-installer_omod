@@ -21,12 +21,12 @@ protected:
   void initFrameworkSettings(const QString& tempPath);
 
 signals:
-  void createMod(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
+  void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
 
   void displayReadme(const QString& modName, const QString& readme);
 
 protected slots:
-  void createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
+  void createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
 
   void displayReadmeSlot(const QString& modName, const QString& readme);
 
