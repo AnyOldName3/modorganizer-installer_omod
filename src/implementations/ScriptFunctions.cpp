@@ -27,7 +27,8 @@ ScriptFunctions::~ScriptFunctions()
 
 ScriptFunctions::!ScriptFunctions()
 {
-  delete mMessageBoxHelper;
+  mMessageBoxHelper->deleteLater();
+  mMessageBoxHelper = nullptr;
 }
 
 void ScriptFunctions::Warn(System::String^ msg)
