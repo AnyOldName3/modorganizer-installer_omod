@@ -26,7 +26,7 @@ signals:
 
   void warningMessageBoxSignal(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons = QMessageBox::Ok, QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);
 
-public slots:
+private slots:
   void criticalMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton);
 
   void informationMessageBoxSlot(QMessageBox::StandardButton& standardButtonOut, QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons, QMessageBox::StandardButton defaultButton);

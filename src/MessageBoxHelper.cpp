@@ -1,7 +1,11 @@
 #include "MessageBoxHelper.h"
 
+#include <QApplication>
+
 MessageBoxHelper::MessageBoxHelper()
 {
+  moveToThread(QApplication::instance()->thread());
+
   connect(this, &MessageBoxHelper::criticalMessageBoxSignal, this, &MessageBoxHelper::criticalMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &MessageBoxHelper::informationMessageBoxSignal, this, &MessageBoxHelper::informationMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &MessageBoxHelper::questionMessageBoxSignal, this, &MessageBoxHelper::questionMessageBoxSlot, Qt::ConnectionType::BlockingQueuedConnection);

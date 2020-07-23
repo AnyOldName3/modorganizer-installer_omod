@@ -4,8 +4,6 @@
 
 #include <iplugininstaller.h>
 
-#include "MessageBoxHelper.h"
-
 // define this here as it's going to be used a lot by things using this class' message box wrappers.
 template<class T>
 T& unused_out(T&& t) { return t; }
@@ -39,5 +37,4 @@ protected slots:
 private:
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
-  MessageBoxHelper mMessageBoxHelper;
 };
