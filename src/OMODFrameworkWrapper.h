@@ -4,10 +4,9 @@
 
 #include <iplugininstaller.h>
 
-// Avoid tempting fate by avoiding letting MOC and C++/CLI see the same files
-class OMODFrameworkWrapper
+class OMODFrameworkWrapper : public QObject
 {
-  Q_DECLARE_TR_FUNCTIONS(OMODFrameworkWrapper)
+  Q_OBJECT
 
 public:
   using EInstallResult = MOBase::IPluginInstaller::EInstallResult;
@@ -20,6 +19,12 @@ public:
 
 protected:
   void initFrameworkSettings(const QString& tempPath);
+
+signals:
+  void createMod(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
+
+protected slots:
+  void createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut);
 
 private:
   MOBase::IOrganizer* mMoInfo;

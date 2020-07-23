@@ -60,6 +60,8 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
   , mParentWidget(parentWidget)
 {
   AssemblyResolver::initialise(mMoInfo);
+
+  connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
 }
 
 ref class InstallInAnotherThreadHelper
@@ -167,11 +169,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
     // TODO: let user rename mod
 
-    // temp removal
-    if (auto oldInterface = mMoInfo->getMod(modName))
-      mMoInfo->removeMod(oldInterface);
-
-    MOBase::IModInterface* modInterface = mMoInfo->createMod(modName);
+    MOBase::IModInterface* modInterface;
+    emit createMod(modName, modInterface);
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
@@ -397,4 +396,9 @@ void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
   scriptSettings->UseSafePatching = true;
 
   OMODFramework::Framework::Settings->ScriptExecutionSettings = scriptSettings;
+}
+
+void OMODFrameworkWrapper::createModSlot(MOBase::GuessedValue<QString>& modName, MOBase::IModInterface*& modInterfaceOut)
+{
+  modInterfaceOut = mMoInfo->createMod(modName);
 }
