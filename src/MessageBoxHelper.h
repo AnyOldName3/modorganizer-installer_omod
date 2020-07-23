@@ -7,6 +7,10 @@ class MessageBoxHelper : public QObject
   Q_OBJECT
 
 public:
+  static void deleter(MessageBoxHelper* obj) { obj->deleteLater(); }
+  using unique_ptr = std::unique_ptr<MessageBoxHelper, decltype(deleter)*>;
+  static unique_ptr make_unique() { return unique_ptr(new MessageBoxHelper, &deleter); }
+
   MessageBoxHelper();
 
   QMessageBox::StandardButton critical(QWidget* parent, const QString& title, const QString& text, QMessageBox::StandardButtons buttons = QMessageBox::Ok, QMessageBox::StandardButton defaultButton = QMessageBox::NoButton);

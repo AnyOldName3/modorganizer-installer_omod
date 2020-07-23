@@ -161,8 +161,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 {
   try
   {
-    auto deleter = [](QObject* obj) {obj->deleteLater(); };
-    std::unique_ptr<MessageBoxHelper, decltype(deleter)> mMessageBoxHelper(new MessageBoxHelper, deleter);
+    MessageBoxHelper::unique_ptr messageBoxHelper = MessageBoxHelper::make_unique();
 
     QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
     initFrameworkSettings(tempPath.path());
@@ -241,7 +240,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
               message = tr("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
             }
 
-            response = mMessageBoxHelper->question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+            response = messageBoxHelper->question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
             if (response == QMessageBox::NoToAll)
             {
               MOBase::log::debug("User skipped all.");
@@ -288,7 +287,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         message = message.arg(toQString(omod.ModName));
         message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
         message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
-        mMessageBoxHelper->information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
+        messageBoxHelper->information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
       }
 
       std::map<QString, int> unhandledScriptReturnDataCounts;
@@ -314,7 +313,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
           userMessage = userMessage.arg(toQString(omod.ModName));
           userMessage = userMessage.arg(unhandledThing.first);
-          mMessageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
+          messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
           MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
         }
       }
