@@ -6,10 +6,14 @@ using namespace cli;
 
 #include <imoinfo.h>
 
+#include "../MessageBoxHelper.h"
+
 ref class ScriptFunctions : OMODFramework::Scripting::IScriptFunctions
 {
 public:
   ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo);
+  ~ScriptFunctions();
+  !ScriptFunctions();
 
   // note: C++/CLI wants virtual for interface implementations, not override
   virtual void Warn(System::String^ msg);
@@ -63,4 +67,5 @@ public:
 private:
   QWidget* mParentWidget;
   MOBase::IOrganizer* mMoInfo;
+  MessageBoxHelper* mMessageBoxHelper;
 };
