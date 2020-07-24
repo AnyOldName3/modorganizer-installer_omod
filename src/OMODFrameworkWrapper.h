@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QCoreApplication>
+#include <QProgressDialog>
 
 #include <iplugininstaller.h>
 
@@ -29,12 +30,18 @@ signals:
 
   void displayReadme(const QString& modName, const QString& readme);
 
+  void showWaitDialog(QString message);
+  void hideWaitDialog();
+
 protected slots:
   void createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
-
   void displayReadmeSlot(const QString& modName, const QString& readme);
+  
+  void showWaitDialogSlot(QString message);
+  void hideWaitDialogSlot();
 
 private:
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
+  QProgressDialog* mWaitDialog;
 };
