@@ -5,6 +5,8 @@
 
 #include <iplugininstaller.h>
 
+#include "implementations/CodeProgress.h"
+
 // define this here as it's going to be used a lot by things using this class' message box wrappers.
 template<class T>
 T& unused_out(T&& t) { return t; }
@@ -23,7 +25,7 @@ public:
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
 protected:
-  void initFrameworkSettings(const QString& tempPath);
+  void initFrameworkSettings(CodeProgressHelper* helper, const QString& tempPath);
 
 signals:
   void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
