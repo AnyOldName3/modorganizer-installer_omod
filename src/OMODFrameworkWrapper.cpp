@@ -65,6 +65,8 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
 
   connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
+  connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
+  connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
 }
 
 ref class InstallInAnotherThreadHelper
@@ -167,7 +169,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     initFrameworkSettings(tempPath.path());
     MOBase::log::debug("Installing {} as OMOD", archiveName);
     // Stack allocating should dispose like a `using` statement in C#
+    emit showWaitDialog("Initializing OMOD installer... ");
     OMODFramework::OMOD omod(toDotNetString(archiveName));
+    emit hideWaitDialog();
 
     if (!System::String::IsNullOrEmpty(omod.ModName))
       modName.update(toQString(omod.ModName), MOBase::EGuessQuality::GUESS_META);
@@ -411,4 +415,17 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
     readmePopup->show();
     readmePopup->setAttribute(Qt::WA_DeleteOnClose);
   }
+}
+
+void OMODFrameworkWrapper::showWaitDialogSlot(QString message) {
+  mWaitDialog = new QProgressDialog(message, tr("Cancel"), 0, 0, mParentWidget);
+  mWaitDialog->setWindowFlags(mWaitDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
+  mWaitDialog->setWindowModality(Qt::WindowModal);
+  mWaitDialog->setCancelButton(nullptr);
+  mWaitDialog->show();
+}
+
+void OMODFrameworkWrapper::hideWaitDialogSlot() {
+  mWaitDialog->hide();
+  mWaitDialog->deleteLater();
 }
