@@ -1,8 +1,8 @@
 using namespace cli;
 
-#include <QDialog>
+#include <QMainWindow>
 
-class RtfPopup : public QDialog
+class RtfPopup : public QMainWindow
 {
   Q_OBJECT
 

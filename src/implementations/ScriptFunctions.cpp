@@ -169,7 +169,7 @@ void ScriptFunctions::DisplayText(System::String^ text, System::String^ title)
 {
   RtfPopup popup(text, mParentWidget);
   popup.setWindowTitle(toQString(title));
-  popup.exec();
+  popup.show();
 }
 
 void ScriptFunctions::Patch(System::String^ from, System::String^ to)
