@@ -28,13 +28,19 @@ public:
                                            const QVector<QString>& descriptions, const QVector<QString>& pixmaps,
                                            bool multiSelect);
 
+  QString InputString(QWidget* parentWidget, const QString& title, const QString& initialText);
+
 signals:
   void DialogSelectSignal(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
                           const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
 
+  void InputStringSignal(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText);
+
 public slots:
   void DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
                         const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
+
+  void InputStringSlot(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText);
 
 private:
   MessageBoxHelper::unique_ptr mMessageBoxHelper;

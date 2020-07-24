@@ -22,6 +22,7 @@ ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHel
   moveToThread(QApplication::instance()->thread());
   
   connect(this, &ScriptFunctionsHelper::DialogSelectSignal, this, &ScriptFunctionsHelper::DialogSelectSlot, Qt::BlockingQueuedConnection);
+  connect(this, &ScriptFunctionsHelper::InputStringSignal, this, &ScriptFunctionsHelper::InputStringSlot, Qt::BlockingQueuedConnection);
 }
 
 std::optional<QVector<int>> ScriptFunctionsHelper::DialogSelect(QWidget* parent, const QString& title, const QVector<QString>& items, const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect)
@@ -29,6 +30,18 @@ std::optional<QVector<int>> ScriptFunctionsHelper::DialogSelect(QWidget* parent,
   std::optional<QVector<int>> result;
   emit DialogSelectSignal(result, parent, title, items, descriptions, pixmaps, multiSelect);
   return result;
+}
+
+QString ScriptFunctionsHelper::InputString(QWidget* parentWidget, const QString& title, const QString& initialText)
+{
+  QString text;
+  emit InputStringSignal(text, parentWidget, title, initialText);
+  return text;
+}
+
+void ScriptFunctionsHelper::InputStringSlot(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText)
+{
+  textOut = QInputDialog::getText(parentWidget, title, title, QLineEdit::Normal, initialText);
 }
 
 void ScriptFunctionsHelper::DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
@@ -111,7 +124,7 @@ System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collect
 
 System::String^ ScriptFunctions::InputString(System::String^ title, System::String^ initialText)
 {
-  return toDotNetString(QInputDialog::getText(mParentWidget, toQString(title), toQString(title), QLineEdit::Normal, initialText ? toQString(initialText) : ""));
+  return toDotNetString(mHelper->InputString(mParentWidget, toQString(title), initialText ? toQString(initialText) : ""));
 }
 
 int ScriptFunctions::DialogYesNo(System::String^ title)
