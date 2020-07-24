@@ -90,7 +90,11 @@ void ScriptFunctionsHelper::DisplayTextSlot(QWidget* parentWidget, const QString
   popup.setWindowTitle(title);
   // the size readmes are becoming automatically
   popup.resize(492, 366);
-  popup.exec();
+  popup.setWindowModality(Qt::ApplicationModal);
+  popup.show();
+  QEventLoop loop;
+  connect(&popup, SIGNAL(closed()), &loop, SLOT(quit()), Qt::DirectConnection);
+  loop.exec();
 }
 
 void ScriptFunctionsHelper::DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
