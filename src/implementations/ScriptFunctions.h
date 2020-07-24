@@ -30,7 +30,7 @@ public:
 
 signals:
   void DialogSelectSignal(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
-    const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
+                          const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
 
 public slots:
   void DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
