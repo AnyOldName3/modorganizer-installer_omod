@@ -16,34 +16,36 @@
 #include "../newstuff/rtfPopup.h"
 #include "../oldstuff/DialogSelect.h"
 
-ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo), mMessageBoxHelper(new MessageBoxHelper) {}
+ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHelper::make_unique()) {}
+
+ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo), mHelper(new ScriptFunctionsHelper) {}
 
 ScriptFunctions::~ScriptFunctions()
 {
-  if (!mMessageBoxHelper)
+  if (!mHelper)
     return;
   this->!ScriptFunctions();
 }
 
 ScriptFunctions::!ScriptFunctions()
 {
-  mMessageBoxHelper->deleteLater();
-  mMessageBoxHelper = nullptr;
+  mHelper->deleteLater();
+  mHelper = nullptr;
 }
 
 void ScriptFunctions::Warn(System::String^ msg)
 {
-  mMessageBoxHelper->warning(mParentWidget, "Warning", toQString(msg));
+  mHelper->warning(mParentWidget, "Warning", toQString(msg));
 }
 
 void ScriptFunctions::Message(System::String^ msg)
 {
-  mMessageBoxHelper->information(mParentWidget, "Message", toQString(msg));
+  mHelper->information(mParentWidget, "Message", toQString(msg));
 }
 
 void ScriptFunctions::Message(System::String^ msg, System::String^ title)
 {
-  mMessageBoxHelper->information(mParentWidget, toQString(title), toQString(msg));
+  mHelper->information(mParentWidget, toQString(title), toQString(msg));
 }
 
 System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collections::Generic::List<System::String^>^ items,
@@ -95,12 +97,12 @@ System::String^ ScriptFunctions::InputString(System::String^ title, System::Stri
 
 int ScriptFunctions::DialogYesNo(System::String^ title)
 {
-  return mMessageBoxHelper->question(mParentWidget, toQString(title), toQString(title)) == QMessageBox::StandardButton::Yes;
+  return mHelper->question(mParentWidget, toQString(title), toQString(title)) == QMessageBox::StandardButton::Yes;
 }
 
 int ScriptFunctions::DialogYesNo(System::String^ title, System::String^ message)
 {
-  return mMessageBoxHelper->question(mParentWidget, toQString(title), toQString(message)) == QMessageBox::StandardButton::Yes;
+  return mHelper->question(mParentWidget, toQString(title), toQString(message)) == QMessageBox::StandardButton::Yes;
 }
 
 void ScriptFunctions::DisplayImage(System::String^ path, System::String^ title)

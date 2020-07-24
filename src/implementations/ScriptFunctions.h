@@ -8,6 +8,28 @@ using namespace cli;
 
 #include "../MessageBoxHelper.h"
 
+class ScriptFunctionsHelper : public QObject
+{
+  Q_OBJECT
+
+public:
+  ScriptFunctionsHelper();
+
+  // don't bother with std::forward and decltype(auto) as we know everything is fine being copied
+  // in fact, as some stuff lives on the managed heap, we can't take a reference anyway
+  template<typename... Args> auto critical(Args... args) { return mMessageBoxHelper->critical(args...); }
+  template<typename... Args> auto information(Args... args) { return mMessageBoxHelper->information(args...); }
+  template<typename... Args> auto question(Args... args) { return mMessageBoxHelper->question(args...); }
+  template<typename... Args> auto warning(Args... args) { return mMessageBoxHelper->warning(args...); }
+
+signals:
+
+public slots:
+
+private:
+  MessageBoxHelper::unique_ptr mMessageBoxHelper;
+};
+
 ref class ScriptFunctions : OMODFramework::Scripting::IScriptFunctions
 {
 public:
@@ -67,5 +89,5 @@ public:
 private:
   QWidget* mParentWidget;
   MOBase::IOrganizer* mMoInfo;
-  MessageBoxHelper* mMessageBoxHelper;
+  ScriptFunctionsHelper* mHelper;
 };
