@@ -2,6 +2,8 @@
 
 using namespace cli;
 
+#include <optional>
+
 #include <QWidget>
 
 #include <imoinfo.h>
@@ -22,9 +24,17 @@ public:
   template<typename... Args> auto question(Args... args) { return mMessageBoxHelper->question(args...); }
   template<typename... Args> auto warning(Args... args) { return mMessageBoxHelper->warning(args...); }
 
+  std::optional<QVector<int>> DialogSelect(QWidget* parent, const QString& title, const QVector<QString>& items,
+                                           const QVector<QString>& descriptions, const QVector<QString>& pixmaps,
+                                           bool multiSelect);
+
 signals:
+  void DialogSelectSignal(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
+    const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
 
 public slots:
+  void DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
+                        const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
 
 private:
   MessageBoxHelper::unique_ptr mMessageBoxHelper;

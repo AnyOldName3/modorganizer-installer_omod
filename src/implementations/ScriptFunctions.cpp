@@ -1,5 +1,6 @@
 #include "ScriptFunctions.h"
 
+#include <QApplication>
 #include <QDir>
 #include <QGridLayout>
 #include <QInputDialog>
@@ -16,7 +17,25 @@
 #include "../newstuff/rtfPopup.h"
 #include "../oldstuff/DialogSelect.h"
 
-ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHelper::make_unique()) {}
+ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHelper::make_unique())
+{
+  moveToThread(QApplication::instance()->thread());
+  
+  connect(this, &ScriptFunctionsHelper::DialogSelectSignal, this, &ScriptFunctionsHelper::DialogSelectSlot, Qt::BlockingQueuedConnection);
+}
+
+std::optional<QVector<int>> ScriptFunctionsHelper::DialogSelect(QWidget* parent, const QString& title, const QVector<QString>& items, const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect)
+{
+  std::optional<QVector<int>> result;
+  emit DialogSelectSignal(result, parent, title, items, descriptions, pixmaps, multiSelect);
+  return result;
+}
+
+void ScriptFunctionsHelper::DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
+                                             const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect)
+{
+  resultOut = ::DialogSelect(parent, title, items, descriptions, pixmaps, multiSelect);
+}
 
 ScriptFunctions::ScriptFunctions(QWidget* parentWidget, MOBase::IOrganizer* moInfo) : mParentWidget(parentWidget), mMoInfo(moInfo), mHelper(new ScriptFunctionsHelper) {}
 
@@ -80,7 +99,7 @@ System::Collections::Generic::List<int>^ ScriptFunctions::Select(System::Collect
       qDescriptions.push_back(toQString(description));
   }
 
-  std::optional<QVector<int>> qResponse = DialogSelect(mParentWidget, toQString(title), qItems, qDescriptions, qPreviews, isMultiSelect);
+  std::optional<QVector<int>> qResponse = mHelper->DialogSelect(mParentWidget, toQString(title), qItems, qDescriptions, qPreviews, isMultiSelect);
   if (!qResponse.has_value())
     return nullptr;
 
