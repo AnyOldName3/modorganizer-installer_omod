@@ -60,6 +60,7 @@ System::Reflection::Assembly^ AssemblyResolver::OnAssemblyResolve(System::Object
 OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidget* parentWidget)
   : mMoInfo(organizer)
   , mParentWidget(parentWidget)
+  , mWaitDialog(nullptr, &progressDialogDeleter)
 {
   AssemblyResolver::initialise(mMoInfo);
 
@@ -418,13 +419,16 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
 }
 
 void OMODFrameworkWrapper::showWaitDialogSlot(QString message) {
-  mWaitDialog = new QProgressDialog(message, QString(), 0, 0, mParentWidget);
+  mWaitDialog = progress_unique_ptr(new QProgressDialog(message, QString(), 0, 0, mParentWidget), &progressDialogDeleter);
   mWaitDialog->setWindowFlags(mWaitDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
   mWaitDialog->setWindowModality(Qt::WindowModal);
   mWaitDialog->show();
 }
 
 void OMODFrameworkWrapper::hideWaitDialogSlot() {
-  mWaitDialog->hide();
-  mWaitDialog->deleteLater();
+  if (mWaitDialog) {
+    mWaitDialog->hide();
+    mWaitDialog->deleteLater();
+    mWaitDialog = nullptr;
+  }
 }

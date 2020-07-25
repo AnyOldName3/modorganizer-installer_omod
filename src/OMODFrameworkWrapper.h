@@ -43,5 +43,8 @@ protected slots:
 private:
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
-  QProgressDialog* mWaitDialog;
+
+  static void progressDialogDeleter(QProgressDialog* obj) { obj->deleteLater(); }
+  using progress_unique_ptr = std::unique_ptr<QProgressDialog, decltype(progressDialogDeleter)*>;
+  progress_unique_ptr mWaitDialog;
 };
