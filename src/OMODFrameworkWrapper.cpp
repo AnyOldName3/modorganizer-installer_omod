@@ -418,10 +418,9 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
 }
 
 void OMODFrameworkWrapper::showWaitDialogSlot(QString message) {
-  mWaitDialog = new QProgressDialog(message, tr("Cancel"), 0, 0, mParentWidget);
+  mWaitDialog = new QProgressDialog(message, QString(), 0, 0, mParentWidget);
   mWaitDialog->setWindowFlags(mWaitDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
   mWaitDialog->setWindowModality(Qt::WindowModal);
-  mWaitDialog->setCancelButton(nullptr);
   mWaitDialog->show();
 }
 
