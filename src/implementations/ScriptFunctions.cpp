@@ -24,6 +24,7 @@ ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHel
   connect(this, &ScriptFunctionsHelper::DialogSelectSignal, this, &ScriptFunctionsHelper::DialogSelectSlot, Qt::BlockingQueuedConnection);
   connect(this, &ScriptFunctionsHelper::InputStringSignal, this, &ScriptFunctionsHelper::InputStringSlot, Qt::BlockingQueuedConnection);
   connect(this, &ScriptFunctionsHelper::DisplayImageSignal, this, &ScriptFunctionsHelper::DisplayImageSlot, Qt::BlockingQueuedConnection);
+  connect(this, &ScriptFunctionsHelper::DisplayTextSignal, this, &ScriptFunctionsHelper::DisplayTextSlot, Qt::BlockingQueuedConnection);
 }
 
 std::optional<QVector<int>> ScriptFunctionsHelper::DialogSelect(QWidget* parent, const QString& title, const QVector<QString>& items, const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect)
@@ -43,6 +44,11 @@ QString ScriptFunctionsHelper::InputString(QWidget* parentWidget, const QString&
 void ScriptFunctionsHelper::DisplayImage(QWidget* parentWidget, const QString& path, const QString& title)
 {
   emit DisplayImageSignal(parentWidget, path, title);
+}
+
+void ScriptFunctionsHelper::DisplayText(QWidget* parentWidget, const QString& path, const QString& title)
+{
+  emit DisplayTextSignal(parentWidget, path, title);
 }
 
 void ScriptFunctionsHelper::InputStringSlot(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText)
@@ -76,6 +82,15 @@ void ScriptFunctionsHelper::DisplayImageSlot(QWidget* parentWidget, const QStrin
   }
   else
     MOBase::log::error("Unable to display {}. Error was {}: {}", path, reader.error(), reader.errorString());
+}
+
+void ScriptFunctionsHelper::DisplayTextSlot(QWidget* parentWidget, const QString& path, const QString& title)
+{
+  RtfPopup popup(toDotNetString(path), parentWidget);
+  popup.setWindowTitle(title);
+  // the size readmes are becoming automatically
+  popup.resize(492, 366);
+  popup.exec();
 }
 
 void ScriptFunctionsHelper::DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
@@ -178,9 +193,7 @@ void ScriptFunctions::DisplayImage(System::String^ path, System::String^ title)
 
 void ScriptFunctions::DisplayText(System::String^ text, System::String^ title)
 {
-  RtfPopup popup(text, mParentWidget);
-  popup.setWindowTitle(toQString(title));
-  popup.exec();
+  mHelper->DisplayText(mParentWidget, toQString(text), toQString(title));
 }
 
 void ScriptFunctions::Patch(System::String^ from, System::String^ to)

@@ -32,6 +32,8 @@ public:
 
   void DisplayImage(QWidget* parentWidget, const QString& path, const QString& title);
 
+  void DisplayText(QWidget* parentWidget, const QString& path, const QString& title);
+
 signals:
   void DialogSelectSignal(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
                           const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
@@ -40,6 +42,8 @@ signals:
 
   void DisplayImageSignal(QWidget* parentWidget, const QString& path, const QString& title);
 
+  void DisplayTextSignal(QWidget* parentWidget, const QString& path, const QString& title);
+
 public slots:
   void DialogSelectSlot(std::optional<QVector<int>>& resultOut, QWidget* parent, const QString& title, const QVector<QString>& items,
                         const QVector<QString>& descriptions, const QVector<QString>& pixmaps, bool multiSelect);
@@ -47,6 +51,8 @@ public slots:
   void InputStringSlot(QString& textOut, QWidget* parentWidget, const QString& title, const QString& initialText);
 
   void DisplayImageSlot(QWidget* parentWidget, const QString& path, const QString& title);
+
+  void DisplayTextSlot(QWidget* parentWidget, const QString& path, const QString& title);
 
 private:
   MessageBoxHelper::unique_ptr mMessageBoxHelper;
