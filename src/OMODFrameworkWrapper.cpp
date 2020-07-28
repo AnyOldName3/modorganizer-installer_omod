@@ -169,8 +169,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
     initFrameworkSettings(tempPath.path());
     MOBase::log::debug("Installing {} as OMOD", archiveName);
-    // Stack allocating should dispose like a `using` statement in C#
+
     emit showWaitDialog("Initializing OMOD installer... ");
+    // Stack allocating should dispose like a `using` statement in C#
     OMODFramework::OMOD omod(toDotNetString(archiveName));
     emit hideWaitDialog();
 
@@ -419,7 +420,7 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
 }
 
 void OMODFrameworkWrapper::showWaitDialogSlot(QString message) {
-  mWaitDialog = progress_unique_ptr(new QProgressDialog(message, QString(), 0, 0, mParentWidget), &progressDialogDeleter);
+  mWaitDialog.reset(new QProgressDialog(message, QString(), 0, 0, mParentWidget));
   mWaitDialog->setWindowFlags(mWaitDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
   mWaitDialog->setWindowModality(Qt::WindowModal);
   mWaitDialog->show();
@@ -428,7 +429,6 @@ void OMODFrameworkWrapper::showWaitDialogSlot(QString message) {
 void OMODFrameworkWrapper::hideWaitDialogSlot() {
   if (mWaitDialog) {
     mWaitDialog->hide();
-    mWaitDialog->deleteLater();
-    mWaitDialog = nullptr;
+    mWaitDialog.reset();
   }
 }

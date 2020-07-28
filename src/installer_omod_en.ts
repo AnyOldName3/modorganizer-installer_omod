@@ -72,10 +72,5 @@
         <source>Mod Organizer 2 can&apos;t completely install this OMOD.</source>
         <translation type="unfinished"></translation>
     </message>
-    <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="422"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
-    </message>
 </context>
 </TS>
