@@ -6,6 +6,7 @@ using namespace cli;
 
 #include <QMessageBox>
 #include <QTemporaryDir>
+#include <QProgressDialog>
 
 #include <imodinterface.h>
 #include <iplugingame.h>
@@ -165,9 +166,11 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   try
   {
     MessageBoxHelper::unique_ptr messageBoxHelper = MessageBoxHelper::make_unique();
+    auto cphDeleter = [](CodeProgressHelper* cph) { cph->deleteLater(); };
+    std::unique_ptr<CodeProgressHelper, decltype(cphDeleter)> codeProgressHelper(new CodeProgressHelper(mParentWidget), cphDeleter);
 
     QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
-    initFrameworkSettings(tempPath.path());
+    initFrameworkSettings(codeProgressHelper.get(), tempPath.path());
     MOBase::log::debug("Installing {} as OMOD", archiveName);
 
     emit showWaitDialog("Initializing OMOD installer... ");
@@ -367,9 +370,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   }
 }
 
-void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
+void OMODFrameworkWrapper::initFrameworkSettings(CodeProgressHelper *helper, const QString& tempPath)
 {
-  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress();
+  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(helper);
 
   if (!tempPath.isEmpty())
     OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);
