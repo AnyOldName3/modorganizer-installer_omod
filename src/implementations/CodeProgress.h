@@ -14,25 +14,24 @@ public:
 
   CodeProgressHelper(QWidget* parentWidget);
 
-  void ShowProgressDialog(__int64 totalSize);
-  void UpdateProgressValue(__int64 size);
+  void ShowProgressDialog();
+  void UpdateProgressValue(int percentage);
   void HideProgressDialog();
 
 public slots:
-  void ShowProgressDialogSlot(__int64 totalSize);
-  void UpdateProgressValueSlot(__int64 size);
+  void ShowProgressDialogSlot();
+  void UpdateProgressValueSlot(int percentage);
   void HideProgressDialogSlot();
 
 signals:
 
-  void ShowProgressDialogSignal(__int64 totalSize);
-  void UpdateProgressValueSignal(__int64 size);
+  void ShowProgressDialogSignal();
+  void UpdateProgressValueSignal(int percentage);
   void HideProgressDialogSignal();
 
 private:
   QWidget* mParentWidget;
   QObject_unique_ptr<QProgressDialog> mProgressDialog;
-  __int64 mTotalSize;
 };
 
 ref class CodeProgress : OMODFramework::ICodeProgress
@@ -50,5 +49,6 @@ public:
 private:
   CodeProgressHelper* mHelper;
   __int64 mTotalSize;
+  int mPercentage;
   bool mCompressing;
 };

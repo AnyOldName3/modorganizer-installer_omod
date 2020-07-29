@@ -7,26 +7,24 @@
 CodeProgressHelper::CodeProgressHelper(QWidget* parentWidget) : mParentWidget{ parentWidget }, mProgressDialog(make_nullptr<QProgressDialog>()) {
   moveToThread(QApplication::instance()->thread());
   connect(this, &CodeProgressHelper::ShowProgressDialogSignal, this, &CodeProgressHelper::ShowProgressDialogSlot, Qt::QueuedConnection);
-  connect(this, &CodeProgressHelper::UpdateProgressValueSignal, this, &CodeProgressHelper::UpdateProgressValueSlot, Qt::QueuedConnection);
+  connect(this, &CodeProgressHelper::UpdateProgressValueSignal, this, &CodeProgressHelper::UpdateProgressValueSlot, Qt::BlockingQueuedConnection);
   connect(this, &CodeProgressHelper::HideProgressDialogSignal, this, &CodeProgressHelper::HideProgressDialogSlot, Qt::QueuedConnection);
 
 }
 
-void CodeProgressHelper::ShowProgressDialog(__int64 totalSize) {
-  emit ShowProgressDialogSignal(totalSize);
+void CodeProgressHelper::ShowProgressDialog() {
+  emit ShowProgressDialogSignal();
 }
 
-void CodeProgressHelper::UpdateProgressValue(__int64 size) {
-  emit UpdateProgressValueSignal(size);
+void CodeProgressHelper::UpdateProgressValue(int percentage) {
+  emit UpdateProgressValueSignal(percentage);
 }
 
 void CodeProgressHelper::HideProgressDialog() {
   emit HideProgressDialogSignal();
 }
 
-void CodeProgressHelper::ShowProgressDialogSlot(__int64 totalSize) {
-  mTotalSize = totalSize;
-
+void CodeProgressHelper::ShowProgressDialogSlot() {
   mProgressDialog.reset(new QProgressDialog(mParentWidget));
   mProgressDialog->setWindowFlags(mProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
   mProgressDialog->setWindowModality(Qt::WindowModal);
@@ -38,11 +36,8 @@ void CodeProgressHelper::ShowProgressDialogSlot(__int64 totalSize) {
   mProgressDialog->show();
 }
 
-void CodeProgressHelper::UpdateProgressValueSlot(__int64 size) {
-  int percent = (int)(100 * size / (double)mTotalSize);
-  if (percent != mProgressDialog->value()) {
-    mProgressDialog->setValue(percent);
-  }
+void CodeProgressHelper::UpdateProgressValueSlot(int percentage) {
+  mProgressDialog->setValue(percentage);
 }
 
 void CodeProgressHelper::HideProgressDialogSlot() {
@@ -54,17 +49,18 @@ void CodeProgress::Init(__int64 totalSize, bool compressing)
 {
   mTotalSize = totalSize;
   mCompressing = compressing;
+  mPercentage = 0;
 
-  mHelper->ShowProgressDialog(totalSize);
+  mHelper->ShowProgressDialog();
   MOBase::log::debug("CodeProgress::Init called with {} {}", totalSize, compressing);
-
-  // TODO: this
 }
 
 void CodeProgress::SetProgress(__int64 inSize, __int64 outSize)
 {
-  // MOBase::log::debug("CodeProgress::SetProgress called with {} {}", inSize, outSize);
-  mHelper->UpdateProgressValue(inSize);
+  int newPercentage = (int)(100 * inSize / (double)mTotalSize);
+  if (newPercentage != mPercentage)
+    mHelper->UpdateProgressValue(newPercentage);
+  mPercentage = newPercentage;
 }
 
 CodeProgress::~CodeProgress()
