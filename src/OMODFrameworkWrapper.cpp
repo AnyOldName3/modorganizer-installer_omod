@@ -61,7 +61,7 @@ System::Reflection::Assembly^ AssemblyResolver::OnAssemblyResolve(System::Object
 OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidget* parentWidget)
   : mMoInfo(organizer)
   , mParentWidget(parentWidget)
-  , mWaitDialog(nullptr, &progressDialogDeleter)
+  , mWaitDialog(make_nullptr<QProgressDialog>())
 {
   AssemblyResolver::initialise(mMoInfo);
 
@@ -165,9 +165,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 {
   try
   {
-    MessageBoxHelper::unique_ptr messageBoxHelper = MessageBoxHelper::make_unique();
-    auto cphDeleter = [](CodeProgressHelper* cph) { cph->deleteLater(); };
-    std::unique_ptr<CodeProgressHelper, decltype(cphDeleter)> codeProgressHelper(new CodeProgressHelper(mParentWidget), cphDeleter);
+    QObject_unique_ptr<MessageBoxHelper> messageBoxHelper = make_unique<MessageBoxHelper>();
+    QObject_unique_ptr<CodeProgressHelper> codeProgressHelper = make_unique<CodeProgressHelper>(mParentWidget);
 
     QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
     initFrameworkSettings(codeProgressHelper.get(), tempPath.path());

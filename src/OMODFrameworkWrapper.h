@@ -6,6 +6,7 @@
 #include <iplugininstaller.h>
 
 #include "implementations/CodeProgress.h"
+#include "QObject_unique_ptr.h"
 
 // define this here as it's going to be used a lot by things using this class' message box wrappers.
 template<class T>
@@ -46,7 +47,5 @@ private:
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
 
-  static void progressDialogDeleter(QProgressDialog* obj) { obj->deleteLater(); }
-  using progress_unique_ptr = std::unique_ptr<QProgressDialog, decltype(progressDialogDeleter)*>;
-  progress_unique_ptr mWaitDialog;
+  QObject_unique_ptr<QProgressDialog> mWaitDialog;
 };

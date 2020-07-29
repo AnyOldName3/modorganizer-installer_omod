@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QProgressDialog>
 
+#include "../QObject_unique_ptr.h"
+
 using namespace cli;
 
 class CodeProgressHelper : public QObject {
@@ -11,7 +13,6 @@ class CodeProgressHelper : public QObject {
 public:
 
   CodeProgressHelper(QWidget* parentWidget);
-  ~CodeProgressHelper();
 
   void ShowProgressDialog(__int64 totalSize);
   void UpdateProgressValue(__int64 size);
@@ -30,7 +31,7 @@ signals:
 
 private:
   QWidget* mParentWidget;
-  QProgressDialog* mProgressDialog;
+  QObject_unique_ptr<QProgressDialog> mProgressDialog;
   __int64 mTotalSize;
 };
 

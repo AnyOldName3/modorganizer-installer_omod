@@ -17,7 +17,7 @@
 #include "../newstuff/rtfPopup.h"
 #include "../oldstuff/DialogSelect.h"
 
-ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(MessageBoxHelper::make_unique())
+ScriptFunctionsHelper::ScriptFunctionsHelper() : mMessageBoxHelper(make_unique<MessageBoxHelper>())
 {
   moveToThread(QApplication::instance()->thread());
   

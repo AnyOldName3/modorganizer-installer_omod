@@ -9,6 +9,7 @@ using namespace cli;
 #include <imoinfo.h>
 
 #include "../MessageBoxHelper.h"
+#include "../QObject_unique_ptr.h"
 
 class ScriptFunctionsHelper : public QObject
 {
@@ -55,7 +56,7 @@ public slots:
   void DisplayTextSlot(QWidget* parentWidget, const QString& path, const QString& title);
 
 private:
-  MessageBoxHelper::unique_ptr mMessageBoxHelper;
+  QObject_unique_ptr<MessageBoxHelper> mMessageBoxHelper;
 };
 
 ref class ScriptFunctions : OMODFramework::Scripting::IScriptFunctions

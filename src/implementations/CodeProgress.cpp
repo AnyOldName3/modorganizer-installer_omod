@@ -4,17 +4,12 @@
 
 #include <log.h>
 
-CodeProgressHelper::CodeProgressHelper(QWidget* parentWidget) : mParentWidget{ parentWidget }, mProgressDialog{ nullptr } {
+CodeProgressHelper::CodeProgressHelper(QWidget* parentWidget) : mParentWidget{ parentWidget }, mProgressDialog(make_nullptr<QProgressDialog>()) {
   moveToThread(QApplication::instance()->thread());
   connect(this, &CodeProgressHelper::ShowProgressDialogSignal, this, &CodeProgressHelper::ShowProgressDialogSlot, Qt::QueuedConnection);
   connect(this, &CodeProgressHelper::UpdateProgressValueSignal, this, &CodeProgressHelper::UpdateProgressValueSlot, Qt::QueuedConnection);
   connect(this, &CodeProgressHelper::HideProgressDialogSignal, this, &CodeProgressHelper::HideProgressDialogSlot, Qt::QueuedConnection);
 
-}
-CodeProgressHelper::~CodeProgressHelper() {
-  if (mProgressDialog) {
-    mProgressDialog->deleteLater();
-  }
 }
 
 void CodeProgressHelper::ShowProgressDialog(__int64 totalSize) {
@@ -30,12 +25,9 @@ void CodeProgressHelper::HideProgressDialog() {
 }
 
 void CodeProgressHelper::ShowProgressDialogSlot(__int64 totalSize) {
-  if (mProgressDialog) {
-    mProgressDialog->deleteLater();
-  }
   mTotalSize = totalSize;
 
-  mProgressDialog = new QProgressDialog(mParentWidget);
+  mProgressDialog.reset(new QProgressDialog(mParentWidget));
   mProgressDialog->setWindowFlags(mProgressDialog->windowFlags() & ~Qt::WindowContextHelpButtonHint & ~Qt::WindowCloseButtonHint);
   mProgressDialog->setWindowModality(Qt::WindowModal);
   mProgressDialog->setCancelButton(nullptr);
@@ -55,8 +47,7 @@ void CodeProgressHelper::UpdateProgressValueSlot(__int64 size) {
 
 void CodeProgressHelper::HideProgressDialogSlot() {
   mProgressDialog->hide();
-  mProgressDialog->deleteLater();
-  mProgressDialog = nullptr;
+  mProgressDialog.reset();
  }
 
 void CodeProgress::Init(__int64 totalSize, bool compressing)
