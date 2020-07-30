@@ -65,10 +65,18 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
 {
   AssemblyResolver::initialise(mMoInfo);
 
+  constructorHelper();
+
   connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
   connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
+}
+
+void OMODFrameworkWrapper::constructorHelper()
+{
+  // We can't call a function doing this before AssemblyResolver::initialise happens as the DLL needs to be available before its stack frame is created.
+  mTempPathStack.push(toQString(OMODFramework::Framework::Settings->TempPath));
 }
 
 ref class InstallInAnotherThreadHelper
@@ -161,14 +169,24 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::installInAnotherThrea
     throw std::runtime_error("Something went horribly wrong when asynchronously installing an OMOD. We don't even have the original exception.");
 }
 
+// TODO: replace with std::scope_exit when it leaves std::experimental
+template <typename T>
+class scope_guard
+{
+public:
+  scope_guard(T onExit) : mOnExit(onExit) {}
+  ~scope_guard() { mOnExit(); }
+private:
+  T mOnExit;
+};
+
 OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
 {
   try
   {
     QObject_unique_ptr<MessageBoxHelper> messageBoxHelper = make_unique<MessageBoxHelper>();
 
-    QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
-    initFrameworkSettings(tempPath.path());
+    initFrameworkSettings();
     MOBase::log::debug("Installing {} as OMOD", archiveName);
 
     emit showWaitDialog("Initializing OMOD installer... ");
@@ -186,175 +204,181 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!modInterface)
       return EInstallResult::RESULT_CANCELED;
 
-    if (omod.HasReadme)
-      emit displayReadme(toQString(omod.ModName), toQString(omod.GetReadme()));
-
-    if (omod.HasScript)
     {
-      MOBase::log::debug("Mod has script. Run it.");
-      OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget, mMoInfo);
-      OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
-      if (!scriptData)
-        throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
-      if (scriptData->CancelInstall)
-        return EInstallResult::RESULT_CANCELED;
+      QTemporaryDir tempPath(modInterface->absolutePath() + "/OMODInstallTempXXXXXX");
+      pushTempPath(tempPath.path());
+      scope_guard tempPathGuard([this]() { this->popTempPath(); });
 
-      // inis first so that you don't need to wait for extraction before a second batch of questions appears
-      if (scriptData->INIEdits && scriptData->INIEdits->Count)
+      if (omod.HasReadme)
+        emit displayReadme(toQString(omod.ModName), toQString(omod.GetReadme()));
+
+      if (omod.HasScript)
       {
-        QString oblivionIniPath = (mMoInfo->profile()->localSettingsEnabled() ? QDir(mMoInfo->profile()->absolutePath()) : mMoInfo->managedGame()->documentsDirectory()).absoluteFilePath("Oblivion.ini");
-        bool yesToAll = false;
-        for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
+        MOBase::log::debug("Mod has script. Run it.");
+        OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget, mMoInfo);
+        OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
+        if (!scriptData)
+          throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
+        if (scriptData->CancelInstall)
+          return EInstallResult::RESULT_CANCELED;
+
+        // inis first so that you don't need to wait for extraction before a second batch of questions appears
+        if (scriptData->INIEdits && scriptData->INIEdits->Count)
         {
-          QString section = toQString(edit->Section);
-          section = section.mid(1, section.size() - 2);
-          QString name = toQString(edit->Name);
-          QString newValue = toQString(edit->NewValue);
-          QString oldValue;
-          if (edit->OldValue)
-            oldValue = toQString(edit->OldValue);
-          else
+          QString oblivionIniPath = (mMoInfo->profile()->localSettingsEnabled() ? QDir(mMoInfo->profile()->absolutePath()) : mMoInfo->managedGame()->documentsDirectory()).absoluteFilePath("Oblivion.ini");
+          bool yesToAll = false;
+          for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
           {
-            // I'm pretty sure this is the maximum length for vanilla Oblivion.
-            wchar_t buffer[256];
-            if (GetPrivateProfileString(section.toStdWString().data(), name.toStdWString().data(), nullptr, buffer, sizeof(buffer) / sizeof(buffer[0]), oblivionIniPath.toStdWString().data()))
-              oldValue = QString::fromWCharArray(buffer);
-          }
-
-          MOBase::log::debug("OMOD wants to set [{}] {} to \"{}\", was \"{}\"", section, name, newValue, oldValue);
-
-          QMessageBox::StandardButton response;
-          if (!yesToAll)
-          {
-            QString message;
-            if (!oldValue.isEmpty())
-            {
-              /*: %1 is the mod name
-                  [%2] is the ini section name.
-                  %3 is the ini setting name.
-                  %4 is the value already in Oblivion.ini.
-                  %5 is the value the mod wants to set.
-              */
-              message = tr("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
-            }
+            QString section = toQString(edit->Section);
+            section = section.mid(1, section.size() - 2);
+            QString name = toQString(edit->Name);
+            QString newValue = toQString(edit->NewValue);
+            QString oldValue;
+            if (edit->OldValue)
+              oldValue = toQString(edit->OldValue);
             else
             {
-              /*: %1 is the mod name
-                  [%2] is the ini section name.
-                  %3 is the ini setting name.
-                  %5 is the value the mod wants to set.
-              */
-              message = tr("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+              // I'm pretty sure this is the maximum length for vanilla Oblivion.
+              wchar_t buffer[256];
+              if (GetPrivateProfileString(section.toStdWString().data(), name.toStdWString().data(), nullptr, buffer, sizeof(buffer) / sizeof(buffer[0]), oblivionIniPath.toStdWString().data()))
+                oldValue = QString::fromWCharArray(buffer);
             }
 
-            response = messageBoxHelper->question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
-            if (response == QMessageBox::NoToAll)
+            MOBase::log::debug("OMOD wants to set [{}] {} to \"{}\", was \"{}\"", section, name, newValue, oldValue);
+
+            QMessageBox::StandardButton response;
+            if (!yesToAll)
             {
-              MOBase::log::debug("User skipped all.");
-              break;
+              QString message;
+              if (!oldValue.isEmpty())
+              {
+                /*: %1 is the mod name
+                    [%2] is the ini section name.
+                    %3 is the ini setting name.
+                    %4 is the value already in Oblivion.ini.
+                    %5 is the value the mod wants to set.
+                */
+                message = tr("%1 wants to change [%2] %3 from \"%4\" to \"%5\"").arg(modName).arg(section).arg(name).arg(oldValue).arg(newValue);
+              }
+              else
+              {
+                /*: %1 is the mod name
+                    [%2] is the ini section name.
+                    %3 is the ini setting name.
+                    %5 is the value the mod wants to set.
+                */
+                message = tr("%1 wants to set [%2] %3 to \"%4\"").arg(modName).arg(section).arg(name).arg(newValue);
+              }
+
+              response = messageBoxHelper->question(mParentWidget, tr("Update INI?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+              if (response == QMessageBox::NoToAll)
+              {
+                MOBase::log::debug("User skipped all.");
+                break;
+              }
+
+              yesToAll |= response == QMessageBox::YesToAll;
             }
 
-            yesToAll |= response == QMessageBox::YesToAll;
+            if (yesToAll || response == QMessageBox::StandardButton::Yes)
+            {
+              MOBase::log::debug("Doing edit.");
+              MOBase::WriteRegistryValue(section.toStdWString().data(), name.toStdWString().data(), newValue.toStdWString().data(), oblivionIniPath.toStdWString().data());
+            }
+            else
+              MOBase::log::debug("User skipped edit.");
           }
-
-          if (yesToAll || response == QMessageBox::StandardButton::Yes)
-          {
-            MOBase::log::debug("Doing edit.");
-            MOBase::WriteRegistryValue(section.toStdWString().data(), name.toStdWString().data(), newValue.toStdWString().data(), oblivionIniPath.toStdWString().data());
-          }
-          else
-            MOBase::log::debug("User skipped edit.");
         }
-      }
 
-      scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
-      // no compatability between auto and var makes me :angery:
-      System::Collections::Generic::HashSet<System::String^>^ installedPlugins = gcnew System::Collections::Generic::HashSet<System::String^>(System::StringComparer::InvariantCultureIgnoreCase);
-      for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
-      {
-        System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), file.InstallTo);
-        System::IO::Directory::CreateDirectory(System::IO::Path::GetDirectoryName(destinationPath));
-        System::IO::File::Copy(file.InstallFrom, destinationPath, true);
-        System::String^ extension = System::IO::Path::GetExtension(file.InstallTo);
-        if (extension && (extension->Equals(".esm", System::StringComparison::InvariantCultureIgnoreCase) || extension->Equals(".esp", System::StringComparison::InvariantCultureIgnoreCase)))
-          installedPlugins->Add(file.InstallTo);
-      }
+        scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
+        // no compatability between auto and var makes me :angery:
+        System::Collections::Generic::HashSet<System::String^>^ installedPlugins = gcnew System::Collections::Generic::HashSet<System::String^>(System::StringComparer::InvariantCultureIgnoreCase);
+        for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
+        {
+          System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), file.InstallTo);
+          System::IO::Directory::CreateDirectory(System::IO::Path::GetDirectoryName(destinationPath));
+          System::IO::File::Copy(file.InstallFrom, destinationPath, true);
+          System::String^ extension = System::IO::Path::GetExtension(file.InstallTo);
+          if (extension && (extension->Equals(".esm", System::StringComparison::InvariantCultureIgnoreCase) || extension->Equals(".esp", System::StringComparison::InvariantCultureIgnoreCase)))
+            installedPlugins->Add(file.InstallTo);
+        }
 
-      if (scriptData->UncheckedPlugins)
-        installedPlugins->ExceptWith(scriptData->UncheckedPlugins);
+        if (scriptData->UncheckedPlugins)
+          installedPlugins->ExceptWith(scriptData->UncheckedPlugins);
 
-      if (installedPlugins->Count && scriptData->UncheckedPlugins && scriptData->UncheckedPlugins->Count)
-      {
-        /*: %1 is the mod name
-            <ul><li>%2</li></ul> becomes a list of ESPs and ESMs the OMOD installed and tried to activate.
-            <ul><li>%3</li></ul> becomes a list of ESPs and ESMs the OMOD installed avoided activating.
-            The point of this popup is to suggest which plugins the user might need to activate themselves.
-        */
-        QString message = tr("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
-        message = message.arg(toQString(omod.ModName));
-        message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
-        message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
-        messageBoxHelper->information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
-      }
-
-      std::map<QString, int> unhandledScriptReturnDataCounts;
-      unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
-      unhandledScriptReturnDataCounts["EarlyPlugins"] = scriptData->EarlyPlugins ? scriptData->EarlyPlugins->Count : 0;
-      unhandledScriptReturnDataCounts["LoadOrderSet"] = scriptData->LoadOrderSet ? scriptData->LoadOrderSet->Count : 0;
-      unhandledScriptReturnDataCounts["ConflictsWith"] = scriptData->ConflictsWith ? scriptData->ConflictsWith->Count : 0;
-      unhandledScriptReturnDataCounts["DependsOn"] = scriptData->DependsOn ? scriptData->DependsOn->Count : 0;
-
-      unhandledScriptReturnDataCounts["RegisterBSASet"] = scriptData->RegisterBSASet ? scriptData->RegisterBSASet->Count : 0;
-      unhandledScriptReturnDataCounts["SDPEdits"] = scriptData->SDPEdits ? scriptData->SDPEdits->Count : 0;
-      unhandledScriptReturnDataCounts["ESPEdits"] = scriptData->ESPEdits ? scriptData->ESPEdits->Count : 0;
-      unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
-
-      for (const auto& unhandledThing : unhandledScriptReturnDataCounts)
-      {
-        if (unhandledThing.second)
+        if (installedPlugins->Count && scriptData->UncheckedPlugins && scriptData->UncheckedPlugins->Count)
         {
           /*: %1 is the mod name
-              %2 is the name of a field in the OMOD's return data
-              Hopefully this message will never be seen by anyone, but if it is, they need to know to tell the Mod Organizer 2 dev team.
+              <ul><li>%2</li></ul> becomes a list of ESPs and ESMs the OMOD installed and tried to activate.
+              <ul><li>%3</li></ul> becomes a list of ESPs and ESMs the OMOD installed avoided activating.
+              The point of this popup is to suggest which plugins the user might need to activate themselves.
           */
-          QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
-          userMessage = userMessage.arg(toQString(omod.ModName));
-          userMessage = userMessage.arg(unhandledThing.first);
-          messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
-          MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
+          QString message = tr("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
+          message = message.arg(toQString(omod.ModName));
+          message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
+          message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
+          messageBoxHelper->information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
+        }
+
+        std::map<QString, int> unhandledScriptReturnDataCounts;
+        unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
+        unhandledScriptReturnDataCounts["EarlyPlugins"] = scriptData->EarlyPlugins ? scriptData->EarlyPlugins->Count : 0;
+        unhandledScriptReturnDataCounts["LoadOrderSet"] = scriptData->LoadOrderSet ? scriptData->LoadOrderSet->Count : 0;
+        unhandledScriptReturnDataCounts["ConflictsWith"] = scriptData->ConflictsWith ? scriptData->ConflictsWith->Count : 0;
+        unhandledScriptReturnDataCounts["DependsOn"] = scriptData->DependsOn ? scriptData->DependsOn->Count : 0;
+
+        unhandledScriptReturnDataCounts["RegisterBSASet"] = scriptData->RegisterBSASet ? scriptData->RegisterBSASet->Count : 0;
+        unhandledScriptReturnDataCounts["SDPEdits"] = scriptData->SDPEdits ? scriptData->SDPEdits->Count : 0;
+        unhandledScriptReturnDataCounts["ESPEdits"] = scriptData->ESPEdits ? scriptData->ESPEdits->Count : 0;
+        unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
+
+        for (const auto& unhandledThing : unhandledScriptReturnDataCounts)
+        {
+          if (unhandledThing.second)
+          {
+            /*: %1 is the mod name
+                %2 is the name of a field in the OMOD's return data
+                Hopefully this message will never be seen by anyone, but if it is, they need to know to tell the Mod Organizer 2 dev team.
+            */
+            QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
+            userMessage = userMessage.arg(toQString(omod.ModName));
+            userMessage = userMessage.arg(unhandledThing.first);
+            messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
+            MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
+          }
         }
       }
-    }
-    else
-    {
-      MOBase::log::debug("Mod has no script. Install contents directly.");
-      QString data = toQString(omod.GetDataFiles());
-      QString plugins = toQString(omod.GetPlugins());
-      if (!data.isNull())
+      else
       {
-        if (MOBase::shellMove(data + "/*.*", modInterface->absolutePath(), true, mParentWidget))
-          MOBase::log::debug("Installed mod files.");
-        else
-          MOBase::log::error("Error while installing mod files.");
-        QFile::remove(data);
+        MOBase::log::debug("Mod has no script. Install contents directly.");
+        QString data = toQString(omod.GetDataFiles());
+        QString plugins = toQString(omod.GetPlugins());
+        if (!data.isNull())
+        {
+          if (MOBase::shellMove(data + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+            MOBase::log::debug("Installed mod files.");
+          else
+            MOBase::log::error("Error while installing mod files.");
+          QFile::remove(data);
+        }
+        if (!plugins.isNull())
+        {
+          if (MOBase::shellMove(plugins + "/*.*", modInterface->absolutePath(), true, mParentWidget))
+            MOBase::log::debug("Installed mod plugins.");
+          else
+            MOBase::log::error("Error while installing mod plugins.");
+          QFile::remove(plugins);
+        }
       }
-      if (!plugins.isNull())
-      {
-        if (MOBase::shellMove(plugins + "/*.*", modInterface->absolutePath(), true, mParentWidget))
-          MOBase::log::debug("Installed mod plugins.");
-        else
-          MOBase::log::error("Error while installing mod plugins.");
-        QFile::remove(plugins);
-      }
+
+      // on success, set mod info
+      MOBase::VersionInfo modVersion(std::max(int(omod.MajorVersion), 0), std::max(int(omod.MinorVersion), 0), std::max(int(omod.BuildVersion), 0));
+      modInterface->setVersion(modVersion);
+
+      // TODO: parse omod.Website. If it's Nexus, set the ID, otherwise set custom URL in meta.ini. We can't set the URL with the installation manager.
+      // TODO: maybe convert omod.Description to HTML and set it as nexusDescription
+      // TODO: maybe Holt will finish the proposed mod metadata API and there'll be a better, tidier option.
     }
-
-    // on success, set mod info
-    MOBase::VersionInfo modVersion(std::max(int(omod.MajorVersion), 0), std::max(int(omod.MinorVersion), 0), std::max(int(omod.BuildVersion), 0));
-    modInterface->setVersion(modVersion);
-
-    // TODO: parse omod.Website. If it's Nexus, set the ID, otherwise set custom URL in meta.ini. We can't set the URL with the installation manager.
-    // TODO: maybe convert omod.Description to HTML and set it as nexusDescription
-    // TODO: maybe Holt will finish the proposed mod metadata API and there'll be a better, tidier option.
 
     return EInstallResult::RESULT_SUCCESS;
   }
@@ -368,12 +392,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   }
 }
 
-void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
+void OMODFrameworkWrapper::initFrameworkSettings()
 {
   OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(mParentWidget);
-
-  if (!tempPath.isEmpty())
-    OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);
 
   // This is a hack to fix an OMOD framework bug and should be removed once it's fixed.
   OMODFramework::Framework::Settings->DllPath = System::IO::Path::Combine(System::IO::Path::GetDirectoryName(OMODFramework::Framework::Settings->DllPath), "OMODFramework.Scripting.dll");
@@ -397,6 +418,20 @@ void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
   scriptSettings->UseSafePatching = true;
 
   OMODFramework::Framework::Settings->ScriptExecutionSettings = scriptSettings;
+}
+
+void OMODFrameworkWrapper::pushTempPath(const QString& tempPath)
+{
+  if (!tempPath.isEmpty())
+    OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);
+  mTempPathStack.push(tempPath);
+}
+
+void OMODFrameworkWrapper::popTempPath()
+{
+  if (mTempPathStack.count() >= 2)
+    mTempPathStack.pop();
+  OMODFramework::Framework::Settings->TempPath = toDotNetString(mTempPathStack.top());
 }
 
 void OMODFrameworkWrapper::createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName)

@@ -2,6 +2,7 @@
 
 #include <QCoreApplication>
 #include <QProgressDialog>
+#include <QStack>
 
 #include <iplugininstaller.h>
 
@@ -26,7 +27,11 @@ public:
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
 protected:
-  void initFrameworkSettings(const QString& tempPath);
+  void initFrameworkSettings();
+
+  void pushTempPath(const QString& tempPath);
+
+  void popTempPath();
 
 signals:
   void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
@@ -44,8 +49,12 @@ protected slots:
   void hideWaitDialogSlot();
 
 private:
+  __declspec(noinline) void constructorHelper();
+
   MOBase::IOrganizer* mMoInfo;
   QWidget* mParentWidget;
+
+  QStack<QString> mTempPathStack;
 
   QObject_unique_ptr<QProgressDialog> mWaitDialog;
 };
