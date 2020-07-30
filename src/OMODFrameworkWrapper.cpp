@@ -166,10 +166,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   try
   {
     QObject_unique_ptr<MessageBoxHelper> messageBoxHelper = make_unique<MessageBoxHelper>();
-    QObject_unique_ptr<CodeProgressHelper> codeProgressHelper = make_unique<CodeProgressHelper>(mParentWidget);
 
     QTemporaryDir tempPath(toQString(System::IO::Path::Combine(System::IO::Path::GetPathRoot(toDotNetString(mMoInfo->modsPath())), "OMODTempXXXXXX")));
-    initFrameworkSettings(codeProgressHelper.get(), tempPath.path());
+    initFrameworkSettings(tempPath.path());
     MOBase::log::debug("Installing {} as OMOD", archiveName);
 
     emit showWaitDialog("Initializing OMOD installer... ");
@@ -369,9 +368,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   }
 }
 
-void OMODFrameworkWrapper::initFrameworkSettings(CodeProgressHelper *helper, const QString& tempPath)
+void OMODFrameworkWrapper::initFrameworkSettings(const QString& tempPath)
 {
-  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(helper);
+  OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(mParentWidget);
 
   if (!tempPath.isEmpty())
     OMODFramework::Framework::Settings->TempPath = toDotNetString(tempPath);

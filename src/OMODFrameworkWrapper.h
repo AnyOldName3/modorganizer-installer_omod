@@ -26,7 +26,7 @@ public:
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
 protected:
-  void initFrameworkSettings(CodeProgressHelper* helper, const QString& tempPath);
+  void initFrameworkSettings(const QString& tempPath);
 
 signals:
   void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);

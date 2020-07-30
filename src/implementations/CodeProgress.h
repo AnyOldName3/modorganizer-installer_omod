@@ -38,7 +38,7 @@ ref class CodeProgress : OMODFramework::ICodeProgress
 {
 public:
 
-  CodeProgress(CodeProgressHelper *helper) : mHelper(helper) { }
+  CodeProgress(QWidget* parentWidget) : mParentWidget(parentWidget) { }
 
   virtual void Init(__int64 totalSize, bool compressing);
 
@@ -46,7 +46,10 @@ public:
 
   ~CodeProgress();
 
+  !CodeProgress();
+
 private:
+  QWidget* mParentWidget;
   CodeProgressHelper* mHelper;
   __int64 mTotalSize;
   int mPercentage;

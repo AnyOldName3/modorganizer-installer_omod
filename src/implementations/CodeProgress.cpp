@@ -2,8 +2,6 @@
 
 #include "CodeProgress.h"
 
-#include <log.h>
-
 CodeProgressHelper::CodeProgressHelper(QWidget* parentWidget) : mParentWidget{ parentWidget }, mProgressDialog(make_nullptr<QProgressDialog>()) {
   moveToThread(QApplication::instance()->thread());
   connect(this, &CodeProgressHelper::ShowProgressDialogSignal, this, &CodeProgressHelper::ShowProgressDialogSlot, Qt::QueuedConnection);
@@ -47,12 +45,14 @@ void CodeProgressHelper::HideProgressDialogSlot() {
 
 void CodeProgress::Init(__int64 totalSize, bool compressing)
 {
+  System::GC::ReRegisterForFinalize(this);
+
   mTotalSize = totalSize;
   mCompressing = compressing;
   mPercentage = 0;
 
+  mHelper = new CodeProgressHelper(mParentWidget);
   mHelper->ShowProgressDialog();
-  MOBase::log::debug("CodeProgress::Init called with {} {}", totalSize, compressing);
 }
 
 void CodeProgress::SetProgress(__int64 inSize, __int64 outSize)
@@ -65,6 +65,16 @@ void CodeProgress::SetProgress(__int64 inSize, __int64 outSize)
 
 CodeProgress::~CodeProgress()
 {
-  MOBase::log::debug("CodeProgress 'destructor' called");
+  if (!mHelper)
+    return;
+
   mHelper->HideProgressDialog();
+  this->!CodeProgress();
+}
+
+CodeProgress::!CodeProgress()
+{
+  if (mHelper)
+    mHelper->deleteLater();
+  mHelper = nullptr;
 }
