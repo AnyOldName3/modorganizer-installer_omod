@@ -34,6 +34,8 @@ protected:
   void popTempPath();
 
 signals:
+  void pickModName(bool& successOut, MOBase::GuessedValue<QString>& modName);
+
   void createMod(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
 
   void displayReadme(const QString& modName, const QString& readme);
@@ -42,6 +44,7 @@ signals:
   void hideWaitDialog();
 
 protected slots:
+  void pickModNameSlot(bool& successOut, MOBase::GuessedValue<QString>& modName);
   void createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName);
   void displayReadmeSlot(const QString& modName, const QString& readme);
   

@@ -21,6 +21,7 @@ using namespace cli;
 #include "interop/QtDotNetConverters.h"
 #include "interop/StdDotNetConverters.h"
 
+#include "newstuff/namedialog.h"
 #include "newstuff/rtfPopup.h"
 
 #include "MessageBoxHelper.h"
@@ -67,6 +68,7 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
 
   constructorHelper();
 
+  connect(this, &OMODFrameworkWrapper::pickModName, this, &OMODFrameworkWrapper::pickModNameSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
@@ -197,7 +199,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
     if (!System::String::IsNullOrEmpty(omod.ModName))
       modName.update(toQString(omod.ModName), MOBase::EGuessQuality::GUESS_META);
 
-    // TODO: let user rename mod
+    bool nameNotCancelled;
+    emit pickModName(nameNotCancelled, modName);
+    if (!nameNotCancelled)
+      return EInstallResult::RESULT_CANCELED;
 
     MOBase::IModInterface* modInterface;
     emit createMod(modInterface, modName);
@@ -432,6 +437,14 @@ void OMODFrameworkWrapper::popTempPath()
   if (mTempPathStack.count() >= 2)
     mTempPathStack.pop();
   OMODFramework::Framework::Settings->TempPath = toDotNetString(mTempPathStack.top());
+}
+
+void OMODFrameworkWrapper::pickModNameSlot(bool& successOut, MOBase::GuessedValue<QString>& modName)
+{
+  NameDialog nameDialog(modName, mParentWidget);
+  successOut = nameDialog.exec() == QDialog::Accepted;
+  if (successOut)
+    modName.update(nameDialog.getName(), MOBase::EGuessQuality::GUESS_USER);
 }
 
 void OMODFrameworkWrapper::createModSlot(MOBase::IModInterface*& modInterfaceOut, MOBase::GuessedValue<QString>& modName)
