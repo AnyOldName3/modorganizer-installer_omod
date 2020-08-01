@@ -78,3 +78,8 @@ CodeProgress::!CodeProgress()
     mHelper->deleteLater();
   mHelper = nullptr;
 }
+
+void CodeProgress::setParentWidget(QWidget* parentWidget)
+{
+  mParentWidget = parentWidget;
+}

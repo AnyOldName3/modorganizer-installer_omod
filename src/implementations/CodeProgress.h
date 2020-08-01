@@ -48,6 +48,8 @@ public:
 
   !CodeProgress();
 
+  void setParentWidget(QWidget* parentWidget);
+
 private:
   QWidget* mParentWidget;
   CodeProgressHelper* mHelper;
