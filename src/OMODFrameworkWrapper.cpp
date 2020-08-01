@@ -385,6 +385,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       // TODO: maybe Holt will finish the proposed mod metadata API and there'll be a better, tidier option.
       if (nexusID != -1)
         modInterface->setNexusID(nexusID);
+
+      modInterface->setInstallationFile(archiveName);
     }
 
     return EInstallResult::RESULT_SUCCESS;
