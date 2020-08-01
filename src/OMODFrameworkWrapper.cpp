@@ -411,11 +411,10 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
   {
     // TODO: ideally this wouldn't be part of the same window heirarchy so that modal popups in the installer don't prevent it being moved/resized etc.
     // DarNified UI's popups are modal for the whole process, so any fancy trick needs to be *here*.
-    RtfPopup* readmePopup = new RtfPopup(toDotNetString(readme), mParentWidget);
+    RtfPopup* readmePopup = new RtfPopup(toDotNetString(readme), nullptr);
     //: %1 is the mod name
     readmePopup->setWindowTitle(tr("%1 Readme").arg(modName));
     readmePopup->show();
-    readmePopup->setAttribute(Qt::WA_DeleteOnClose);
   }
 }
 

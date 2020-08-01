@@ -8,7 +8,7 @@
 
 #include "../interop/QtDotNetConverters.h"
 
-RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) : QMainWindow(nullptr, f)
+RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) : QMainWindow(parent, f)
 {
   QString text = rtfText->StartsWith("{\\rtf") ? toQString(RtfPipe::Rtf::ToHtml(rtfText)) : Qt::convertFromPlainText(toQString(rtfText), Qt::WhiteSpaceNormal);
   QRegularExpression urlFinder(R"REGEX((?<!(?:href="))((?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;)*\)|[-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;))*(?:\([-A-Z0-9+@#/%=~+|$?!:,.]|(?:&amp;)*\)|[A-Z0-9+@#/%=~_|$]|(?:&amp;))))REGEX", QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption);
