@@ -14,8 +14,6 @@ RtfPopup::RtfPopup(System::String^ rtfText, QWidget* parent, Qt::WindowFlags f) 
   QRegularExpression urlFinder(R"REGEX((?<!(?:href="))((?:(?:https?|ftp|file)://|www\.|ftp\.)(?:\([-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;)*\)|[-A-Z0-9+@#/%=~_|$?!:,.]|(?:&amp;))*(?:\([-A-Z0-9+@#/%=~+|$?!:,.]|(?:&amp;)*\)|[A-Z0-9+@#/%=~_|$]|(?:&amp;))))REGEX", QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption);
   text.replace(urlFinder, R"(<a href="\1">\1</a>)");
 
-  setAttribute(Qt::WA_DeleteOnClose);
-
   QScrollArea* scrollArea = new QScrollArea(this);
   scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);

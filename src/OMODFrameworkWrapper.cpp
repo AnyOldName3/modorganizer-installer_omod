@@ -414,6 +414,7 @@ void OMODFrameworkWrapper::displayReadmeSlot(const QString& modName, const QStri
     RtfPopup* readmePopup = new RtfPopup(toDotNetString(readme), nullptr);
     //: %1 is the mod name
     readmePopup->setWindowTitle(tr("%1 Readme").arg(modName));
+    readmePopup->setAttribute(Qt::WA_DeleteOnClose);
     readmePopup->show();
   }
 }
