@@ -426,7 +426,7 @@ void OMODFrameworkWrapper::initFrameworkSettings()
   scriptSettings->OblivionGamePath = toDotNetString(mMoInfo->managedGame()->gameDirectory().path());
   System::String^ iniLocation = toDotNetString(mMoInfo->profile()->localSettingsEnabled() ? mMoInfo->profile()->absolutePath() : mMoInfo->managedGame()->documentsDirectory().path());
   scriptSettings->OblivionINIPath = System::IO::Path::Combine(iniLocation, "Oblivion.ini");
-  scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(iniLocation, "RendererInfo.txt");
+  scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(toDotNetString(mMoInfo->managedGame()->documentsDirectory().path()), "RendererInfo.txt");
   scriptSettings->ReadINIWithInterface = false;
   scriptSettings->ReadRendererInfoWithInterface = false;
   scriptSettings->HandleBSAsWithInterface = false;
