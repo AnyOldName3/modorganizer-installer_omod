@@ -22,6 +22,11 @@ QString InstallerOMOD::name() const
   return "Omod Installer";
 }
 
+QString InstallerOMOD::localizedName() const
+{
+  return tr("Omod Installer");
+}
+
 QString InstallerOMOD::author() const
 {
   return "AnyOldName3 & erril120";
@@ -44,7 +49,7 @@ bool InstallerOMOD::isActive() const
 
 QList<MOBase::PluginSetting> InstallerOMOD::settings() const
 {
-  return { MOBase::PluginSetting("enabled", tr("check to enable this plugin"), QVariant(true)) };
+  return { MOBase::PluginSetting("enabled", tr("Check to enable this plugin"), QVariant(true)) };
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

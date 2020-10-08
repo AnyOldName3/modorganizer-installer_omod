@@ -20,6 +20,8 @@ public:
 
   QString name() const override;
 
+  QString localizedName() const override;
+
   QString author() const override;
 
   QString description() const override;

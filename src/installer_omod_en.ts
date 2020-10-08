@@ -4,13 +4,19 @@
 <context>
     <name>InstallerOMOD</name>
     <message>
-        <location filename="installerOmod.cpp" line="32"/>
+        <location filename="installerOmod.cpp" line="27"/>
+        <source>Omod Installer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="installerOmod.cpp" line="37"/>
         <source>Installer for Omod files (including scripted ones)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="installerOmod.cpp" line="47"/>
-        <source>check to enable this plugin</source>
+        <location filename="installerOmod.cpp" line="52"/>
+        <source>Check to enable this plugin</source>
+        <oldsource>check to enable this plugin</oldsource>
         <translation type="unfinished"></translation>
     </message>
 </context>
