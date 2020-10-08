@@ -237,7 +237,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         // inis first so that you don't need to wait for extraction before a second batch of questions appears
         if (scriptData->INIEdits && scriptData->INIEdits->Count)
         {
-          QString oblivionIniPath = (mMoInfo->profile()->localSettingsEnabled() ? QDir(mMoInfo->profile()->absolutePath()) : mMoInfo->managedGame()->documentsDirectory()).absoluteFilePath("Oblivion.ini");
+          QString oblivionIniPath = mMoInfo->profile()->absoluteIniFilePath("Oblivion.ini");
           bool yesToAll = false;
           for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
           {
@@ -424,8 +424,7 @@ void OMODFrameworkWrapper::initFrameworkSettings()
   OMODFramework::ScriptExecutionSettings^ scriptSettings = gcnew OMODFramework::ScriptExecutionSettings();
   scriptSettings->EnableWarnings = true;
   scriptSettings->OblivionGamePath = toDotNetString(mMoInfo->managedGame()->gameDirectory().path());
-  System::String^ iniLocation = toDotNetString(mMoInfo->profile()->localSettingsEnabled() ? mMoInfo->profile()->absolutePath() : mMoInfo->managedGame()->documentsDirectory().path());
-  scriptSettings->OblivionINIPath = System::IO::Path::Combine(iniLocation, "Oblivion.ini");
+  scriptSettings->OblivionINIPath = toDotNetString(mMoInfo->profile()->absoluteIniFilePath("Oblivion.ini"));
   scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(toDotNetString(mMoInfo->managedGame()->documentsDirectory().path()), "RendererInfo.txt");
   scriptSettings->ReadINIWithInterface = false;
   scriptSettings->ReadRendererInfoWithInterface = false;

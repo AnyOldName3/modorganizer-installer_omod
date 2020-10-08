@@ -51,18 +51,18 @@
 <context>
     <name>OMODFrameworkWrapper</name>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="468"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="467"/>
         <source>Display Readme?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="470"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="469"/>
         <source>The Readme may explain installation options. Display it?&lt;br&gt;It will remain visible until you close it.</source>
         <extracomment>&lt;br&gt; is a line break. Translators can remove it if it makes things clearer.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="476"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="475"/>
         <source>%1 Readme</source>
         <extracomment>%1 is the mod name</extracomment>
         <translation type="unfinished"></translation>
