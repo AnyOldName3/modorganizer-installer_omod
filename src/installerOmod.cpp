@@ -4,7 +4,7 @@
 
 #include "OMODFrameworkWrapper.h"
 
-InstallerOMOD::InstallerOMOD() : mMoInfo(nullptr)
+InstallerOMOD::InstallerOMOD() : mMoInfo(nullptr), mOmodFrameworkWrapper(nullptr)
 {
 }
 
@@ -14,6 +14,7 @@ InstallerOMOD::InstallerOMOD() : mMoInfo(nullptr)
 bool InstallerOMOD::init(MOBase::IOrganizer* moInfo)
 {
   mMoInfo = moInfo;
+  mOmodFrameworkWrapper = std::make_unique<OMODFrameworkWrapper>(mMoInfo);
   return true;
 }
 
@@ -76,6 +77,12 @@ bool InstallerOMOD::isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> 
   return false;
 }
 
+void InstallerOMOD::setParentWidget(QWidget* parent)
+{
+  IPluginInstaller::setParentWidget(parent);
+  mOmodFrameworkWrapper->setParentWidget(parent);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // IPluginInstallerCustom
 
@@ -91,6 +98,5 @@ std::set<QString> InstallerOMOD::supportedExtensions() const
 
 InstallerOMOD::EInstallResult InstallerOMOD::install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
 {
-  OMODFrameworkWrapper omodInstaller(mMoInfo, parentWidget());
-  return omodInstaller.installInAnotherThread(modName, gameName, archiveName, version, nexusID);
+  return mOmodFrameworkWrapper->installInAnotherThread(modName, gameName, archiveName, version, nexusID);
 }

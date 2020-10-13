@@ -20,14 +20,18 @@ class OMODFrameworkWrapper : public QObject
 public:
   using EInstallResult = MOBase::IPluginInstaller::EInstallResult;
 
-  OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidget* parentWidget);
+  OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidget* parentWidget = nullptr);
 
   EInstallResult installInAnotherThread(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID);
 
+  void setParentWidget(QWidget* parentWidget);
+
 protected:
   void initFrameworkSettings();
+
+  void refreshFrameworkSettings();
 
   void pushTempPath(const QString& tempPath);
 

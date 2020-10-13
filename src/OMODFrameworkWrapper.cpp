@@ -73,6 +73,8 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
   connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
   connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
   connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
+
+  initFrameworkSettings();
 }
 
 void OMODFrameworkWrapper::constructorHelper()
@@ -188,10 +190,10 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   {
     QObject_unique_ptr<MessageBoxHelper> messageBoxHelper = make_unique<MessageBoxHelper>();
 
-    initFrameworkSettings();
     MOBase::log::debug("Installing {} as OMOD", archiveName);
 
     emit showWaitDialog("Initializing OMOD installer... ");
+    refreshFrameworkSettings();
     // Stack allocating should dispose like a `using` statement in C#
     OMODFramework::OMOD omod(toDotNetString(archiveName));
     emit hideWaitDialog();
@@ -408,6 +410,13 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
   }
 }
 
+void OMODFrameworkWrapper::setParentWidget(QWidget* parentWidget)
+{
+  mParentWidget = parentWidget;
+  if (OMODFramework::Framework::Settings->CodeProgress)
+    static_cast<CodeProgress^>(OMODFramework::Framework::Settings->CodeProgress)->setParentWidget(mParentWidget);
+}
+
 void OMODFrameworkWrapper::initFrameworkSettings()
 {
   OMODFramework::Framework::Settings->CodeProgress = gcnew CodeProgress(mParentWidget);
@@ -423,9 +432,6 @@ void OMODFrameworkWrapper::initFrameworkSettings()
 
   OMODFramework::ScriptExecutionSettings^ scriptSettings = gcnew OMODFramework::ScriptExecutionSettings();
   scriptSettings->EnableWarnings = true;
-  scriptSettings->OblivionGamePath = toDotNetString(mMoInfo->managedGame()->gameDirectory().path());
-  scriptSettings->OblivionINIPath = toDotNetString(mMoInfo->profile()->absoluteIniFilePath("Oblivion.ini"));
-  scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(toDotNetString(mMoInfo->managedGame()->documentsDirectory().path()), "RendererInfo.txt");
   scriptSettings->ReadINIWithInterface = false;
   scriptSettings->ReadRendererInfoWithInterface = false;
   scriptSettings->HandleBSAsWithInterface = false;
@@ -433,6 +439,19 @@ void OMODFrameworkWrapper::initFrameworkSettings()
   scriptSettings->UseSafePatching = true;
 
   OMODFramework::Framework::Settings->ScriptExecutionSettings = scriptSettings;
+}
+
+void OMODFrameworkWrapper::refreshFrameworkSettings()
+{
+  OMODFramework::ScriptExecutionSettings^ scriptSettings = OMODFramework::Framework::Settings->ScriptExecutionSettings;
+
+  if (scriptSettings && mMoInfo->managedGame())
+  {
+    // the managed game isn't set during initFrameworkSettings, so only do this here
+    scriptSettings->OblivionGamePath = toDotNetString(mMoInfo->managedGame()->gameDirectory().path());
+    scriptSettings->OblivionINIPath = toDotNetString(mMoInfo->profile()->absoluteIniFilePath("Oblivion.ini"));
+    scriptSettings->OblivionRendererInfoPath = System::IO::Path::Combine(toDotNetString(mMoInfo->managedGame()->documentsDirectory().path()), "RendererInfo.txt");
+  }
 }
 
 void OMODFrameworkWrapper::pushTempPath(const QString& tempPath)

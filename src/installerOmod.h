@@ -3,6 +3,8 @@
 
 #include <iplugininstallercustom.h>
 
+#include "OMODFrameworkWrapper.h"
+
 class InstallerOMOD : public MOBase::IPluginInstallerCustom
 {
   Q_OBJECT;
@@ -40,6 +42,8 @@ public:
 
   bool isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const override;
 
+  void setParentWidget(QWidget* parent) override;
+
   // IPluginInstallerCustom
 
   bool isArchiveSupported(const QString& archiveName) const override;
@@ -50,6 +54,7 @@ public:
 
 private:
   MOBase::IOrganizer* mMoInfo;
+  std::unique_ptr<OMODFrameworkWrapper> mOmodFrameworkWrapper;
 };
 
 #endif // !INSTALLEROMOD_H
