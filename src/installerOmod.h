@@ -40,6 +40,8 @@ public:
 
   bool isManualInstaller() const override;
 
+  void onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod) override;
+
   bool isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const override;
 
   void setParentWidget(QWidget* parent) override;

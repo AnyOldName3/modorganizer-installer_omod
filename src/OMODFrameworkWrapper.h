@@ -28,6 +28,8 @@ public:
 
   void setParentWidget(QWidget* parentWidget);
 
+  void onInstallationEnd(EInstallResult status, MOBase::IModInterface* mod);
+
 protected:
   void initFrameworkSettings();
 

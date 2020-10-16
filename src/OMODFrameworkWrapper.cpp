@@ -3,16 +3,21 @@
 using namespace cli;
 
 #include <algorithm>
+#include <array>
 
 #include <QMessageBox>
 #include <QTemporaryDir>
 #include <QProgressDialog>
 
 #include <imodinterface.h>
+#include <imodlist.h>
 #include <iplugingame.h>
+#include <ipluginlist.h>
 #include <log.h>
 #include <utility.h>
 #include <registry.h>
+
+#include <gameplugins.h>
 
 #include "implementations/CodeProgress.h"
 #include "implementations/Logger.h"
@@ -320,19 +325,17 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         if (scriptData->UncheckedPlugins)
           installedPlugins->ExceptWith(scriptData->UncheckedPlugins);
 
-        if (installedPlugins->Count && scriptData->UncheckedPlugins && scriptData->UncheckedPlugins->Count)
+        QStringList defaultActivePlugins;
+        for each (System::String ^ plugin in installedPlugins)
+          defaultActivePlugins.append(toQString(plugin));
+        modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".defaultActivePlugins", defaultActivePlugins);
+        QStringList defaultInactivePlugins;
+        if (scriptData->UncheckedPlugins)
         {
-          /*: %1 is the mod name
-              <ul><li>%2</li></ul> becomes a list of ESPs and ESMs the OMOD installed and tried to activate.
-              <ul><li>%3</li></ul> becomes a list of ESPs and ESMs the OMOD installed avoided activating.
-              The point of this popup is to suggest which plugins the user might need to activate themselves.
-          */
-          QString message = tr("%1 installed and wants to activate the following plugins:<ul><li>%2</li></ul>However, it didn't try to activate these plugins:<ul><li>%3</li></ul>");
-          message = message.arg(toQString(omod.ModName));
-          message = message.arg(toQString(System::String::Join("</li><li>", installedPlugins)));
-          message = message.arg(toQString(System::String::Join("</li><li>", scriptData->UncheckedPlugins)));
-          messageBoxHelper->information(mParentWidget, tr("OMOD didn't activate all plugins"), message);
+          for each (System::String ^ plugin in scriptData->UncheckedPlugins)
+            defaultInactivePlugins.append(toQString(plugin));
         }
+        modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".defaultInactivePlugins", defaultInactivePlugins);
 
         std::map<QString, int> unhandledScriptReturnDataCounts;
         unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
@@ -377,6 +380,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         }
         if (!plugins.isNull())
         {
+          QStringList defaultActivePlugins = QDir(plugins).entryList({ "*.esm", "*.esp" }, QDir::Files);
+          modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".defaultActivePlugins", defaultActivePlugins);
+          modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".defaultInactivePlugins", QStringList());
           if (MOBase::shellMove(plugins + "/*.*", modInterface->absolutePath(), true, mParentWidget))
             MOBase::log::debug("Installed mod plugins.");
           else
@@ -398,6 +404,12 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       modInterface->setInstallationFile(archiveName);
     }
 
+    QStringList omodsPendingPostInstall = modInterface->pluginSetting("Omod Installer", "omodsPendingPostInstall", QStringList()).toStringList();
+    if (!omodsPendingPostInstall.contains(toQString(omod.ModName)))
+    {
+      omodsPendingPostInstall.append(toQString(omod.ModName));
+      modInterface->setPluginSetting("Omod Installer", "omodsPendingPostInstall", omodsPendingPostInstall);
+    }
     return EInstallResult::RESULT_SUCCESS;
   }
   catch (const std::exception& e)
@@ -415,6 +427,127 @@ void OMODFrameworkWrapper::setParentWidget(QWidget* parentWidget)
   mParentWidget = parentWidget;
   if (OMODFramework::Framework::Settings->CodeProgress)
     static_cast<CodeProgress^>(OMODFramework::Framework::Settings->CodeProgress)->setParentWidget(mParentWidget);
+}
+
+const std::array<QString, 3> pluginStateNames = { "STATE_MISSING", "STATE_INACTIVE", "STATE_ACTIVE" };
+
+void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IModInterface* mod)
+{
+  if (status != EInstallResult::RESULT_SUCCESS || !mod)
+    return;
+
+  QStringList omodsPendingPostInstall = mod->pluginSetting("Omod Installer", "omodsPendingPostInstall", QStringList()).toStringList();
+
+  if (!omodsPendingPostInstall.empty() && !(mMoInfo->modList()->state(mod->name()) & MOBase::IModList::STATE_ACTIVE))
+  {
+    auto response = QMessageBox::question(mParentWidget, tr("Activate mod?"),
+                                        /*: %1 is the left-pane mod name.
+                                            %2 is the name from the metadata of an OMOD.
+                                        */
+                                        tr("%1 contains the OMOD %2. OMODs may have post-installation actions like activating ESPs. Would you like to enable the mod so this can happen now?").arg(mod->name()).arg(omodsPendingPostInstall[0]),
+                                        QMessageBox::Yes | QMessageBox::No);
+
+    if (response == QMessageBox::StandardButton::Yes)
+      mMoInfo->modList()->setActive(mod->name(), true);
+  }
+
+  for (const auto& omodName : omodsPendingPostInstall)
+  {
+    MOBase::log::debug("Running post-install for {}", omodName);
+    QStringList defaultActivePlugins = mod->pluginSetting("Omod Installer", omodName + ".defaultActivePlugins", QStringList()).toStringList();
+    QStringList defaultInactivePlugins = mod->pluginSetting("Omod Installer", omodName + ".defaultInactivePlugins", QStringList()).toStringList();
+
+    bool yesToAll = false;
+    for (const auto& plugin : defaultActivePlugins)
+    {
+      MOBase::IPluginList::PluginStates oldState = mMoInfo->pluginList()->state(plugin);
+      MOBase::log::debug("OMOD wants to activate {}, was {}", plugin, pluginStateNames[oldState]);
+
+      QMessageBox::StandardButton response;
+      if (!yesToAll)
+      {
+        QString message;
+        if (oldState == MOBase::IPluginList::STATE_INACTIVE)
+        {
+          /*: %1 is the mod name.
+              %2 is the plugin name.
+          */
+          message = tr("%1 wants to activate %2. Do you want to do so?").arg(omodName).arg(plugin);
+
+          response = QMessageBox::question(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+          if (response == QMessageBox::NoToAll)
+          {
+            MOBase::log::debug("User skipped all.");
+            break;
+          }
+
+          yesToAll |= response == QMessageBox::YesToAll;
+        }
+        else
+        {
+          if (oldState == MOBase::IPluginList::STATE_MISSING)
+            QMessageBox::warning(mParentWidget, tr("OMOD wants to activate missing plugin"), tr("An OMOD wants to activate a missing plugin. This shouldn't be possible. Please report this to a MO2 developer."));
+          continue;
+        }
+      }
+
+      if (yesToAll || response == QMessageBox::StandardButton::Yes)
+      {
+        MOBase::log::debug("Activating plugin.");
+        mMoInfo->pluginList()->setState(plugin, MOBase::IPluginList::STATE_ACTIVE);
+      }
+      else
+        MOBase::log::debug("User skipped plugin.");
+    }
+
+    yesToAll = false;
+    for (const auto& plugin : defaultInactivePlugins)
+    {
+      MOBase::IPluginList::PluginStates oldState = mMoInfo->pluginList()->state(plugin);
+      MOBase::log::debug("OMOD installed {}, but didn't try and activate it. State was {}", plugin, pluginStateNames[oldState]);
+
+      QMessageBox::StandardButton response;
+      if (!yesToAll)
+      {
+        QString message;
+        if (oldState == MOBase::IPluginList::STATE_INACTIVE)
+        {
+          /*: %1 is the mod name.
+              %2 is the plugin name.
+          */
+          message = tr("%1 installed %2, but doesn't activate it by default. Do you want to activate it anyway?").arg(omodName).arg(plugin);
+
+          response = QMessageBox::question(mParentWidget, tr("Activate plugin?"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll | QMessageBox::NoToAll);
+          if (response == QMessageBox::NoToAll)
+          {
+            MOBase::log::debug("User skipped all.");
+            break;
+          }
+
+          yesToAll |= response == QMessageBox::YesToAll;
+        }
+        else
+        {
+          if (oldState == MOBase::IPluginList::STATE_MISSING)
+            QMessageBox::warning(mParentWidget, tr("OMOD claimed to install missing plugin"), tr("An OMOD has activation settings for a missing plugin. This shouldn't be possible. Please report this to a MO2 developer."));
+          continue;
+        }
+      }
+
+      if (yesToAll || response == QMessageBox::StandardButton::Yes)
+      {
+        MOBase::log::debug("Activating plugin.");
+        mMoInfo->pluginList()->setState(plugin, MOBase::IPluginList::STATE_ACTIVE);
+      }
+      else
+        MOBase::log::debug("User skipped plugin.");
+    }
+
+    // this is still ugly.
+    mMoInfo->managedGame()->feature<GamePlugins>()->writePluginLists(mMoInfo->pluginList());
+  }
+
+  mod->setPluginSetting("Omod Installer", "omodsPendingPostInstall", QStringList());
 }
 
 void OMODFrameworkWrapper::initFrameworkSettings()

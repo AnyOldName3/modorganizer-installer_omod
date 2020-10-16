@@ -67,6 +67,11 @@ bool InstallerOMOD::isManualInstaller() const
   return false;
 }
 
+void InstallerOMOD::onInstallationEnd(EInstallResult result, MOBase::IModInterface* newMod)
+{
+  mOmodFrameworkWrapper->onInstallationEnd(result, newMod);
+}
+
 bool InstallerOMOD::isArchiveSupported(std::shared_ptr<const MOBase::IFileTree> tree) const
 {
   for (const auto file : *tree) {

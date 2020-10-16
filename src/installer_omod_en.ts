@@ -57,58 +57,96 @@
 <context>
     <name>OMODFrameworkWrapper</name>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="486"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="443"/>
+        <source>Activate mod?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="447"/>
+        <source>%1 contains the OMOD %2. OMODs may have post-installation actions like activating ESPs. Would you like to enable the mod so this can happen now?</source>
+        <extracomment>%1 is the left-pane mod name. %2 is the name from the metadata of an OMOD.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="475"/>
+        <source>%1 wants to activate %2. Do you want to do so?</source>
+        <extracomment>%1 is the mod name. %2 is the plugin name.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="477"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="520"/>
+        <source>Activate plugin?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="489"/>
+        <source>OMOD wants to activate missing plugin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="489"/>
+        <source>An OMOD wants to activate a missing plugin. This shouldn&apos;t be possible. Please report this to a MO2 developer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="518"/>
+        <source>%1 installed %2, but doesn&apos;t activate it by default. Do you want to activate it anyway?</source>
+        <extracomment>%1 is the mod name. %2 is the plugin name.</extracomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="532"/>
+        <source>OMOD claimed to install missing plugin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="532"/>
+        <source>An OMOD has activation settings for a missing plugin. This shouldn&apos;t be possible. Please report this to a MO2 developer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="OMODFrameworkWrapper.cpp" line="619"/>
         <source>Display Readme?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="488"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="621"/>
         <source>The Readme may explain installation options. Display it?&lt;br&gt;It will remain visible until you close it.</source>
         <extracomment>&lt;br&gt; is a line break. Translators can remove it if it makes things clearer.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="494"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="627"/>
         <source>%1 Readme</source>
         <extracomment>%1 is the mod name</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="275"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="280"/>
         <source>%1 wants to change [%2] %3 from &quot;%4&quot; to &quot;%5&quot;</source>
         <extracomment>%1 is the mod name [%2] is the ini section name. %3 is the ini setting name. %4 is the value already in Oblivion.ini. %5 is the value the mod wants to set.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="284"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="289"/>
         <source>%1 wants to set [%2] %3 to &quot;%4&quot;</source>
         <extracomment>%1 is the mod name [%2] is the ini section name. %3 is the ini setting name. %5 is the value the mod wants to set.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="287"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="292"/>
         <source>Update INI?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="330"/>
-        <source>%1 installed and wants to activate the following plugins:&lt;ul&gt;&lt;li&gt;%2&lt;/li&gt;&lt;/ul&gt;However, it didn&apos;t try to activate these plugins:&lt;ul&gt;&lt;li&gt;%3&lt;/li&gt;&lt;/ul&gt;</source>
-        <extracomment>%1 is the mod name &lt;ul&gt;&lt;li&gt;%2&lt;/li&gt;&lt;/ul&gt; becomes a list of ESPs and ESMs the OMOD installed and tried to activate. &lt;ul&gt;&lt;li&gt;%3&lt;/li&gt;&lt;/ul&gt; becomes a list of ESPs and ESMs the OMOD installed avoided activating. The point of this popup is to suggest which plugins the user might need to activate themselves.</extracomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="334"/>
-        <source>OMOD didn&apos;t activate all plugins</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="357"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="360"/>
         <source>%1 has data for %2, but Mod Organizer 2 doesn&apos;t know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn&apos;t find any OMODs that actually did this, and we need to know that they exist.</source>
         <extracomment>%1 is the mod name %2 is the name of a field in the OMOD&apos;s return data Hopefully this message will never be seen by anyone, but if it is, they need to know to tell the Mod Organizer 2 dev team.</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="OMODFrameworkWrapper.cpp" line="360"/>
+        <location filename="OMODFrameworkWrapper.cpp" line="363"/>
         <source>Mod Organizer 2 can&apos;t completely install this OMOD.</source>
         <translation type="unfinished"></translation>
     </message>
