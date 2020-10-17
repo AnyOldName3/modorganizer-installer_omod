@@ -357,6 +357,14 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         }
         modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".defaultInactivePlugins", defaultInactivePlugins);
 
+        QStringList registeredBSAs;
+        if (scriptData->RegisterBSASet)
+        {
+          for each (System::String ^ bsa in scriptData->RegisterBSASet)
+            registeredBSAs.append(toQString(bsa));
+        }
+        modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".registeredBSAs", registeredBSAs);
+
         std::map<QString, int> unhandledScriptReturnDataCounts;
         unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
         unhandledScriptReturnDataCounts["EarlyPlugins"] = scriptData->EarlyPlugins ? scriptData->EarlyPlugins->Count : 0;
@@ -364,7 +372,6 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         unhandledScriptReturnDataCounts["ConflictsWith"] = scriptData->ConflictsWith ? scriptData->ConflictsWith->Count : 0;
         unhandledScriptReturnDataCounts["DependsOn"] = scriptData->DependsOn ? scriptData->DependsOn->Count : 0;
 
-        unhandledScriptReturnDataCounts["RegisterBSASet"] = scriptData->RegisterBSASet ? scriptData->RegisterBSASet->Count : 0;
         unhandledScriptReturnDataCounts["SDPEdits"] = scriptData->SDPEdits ? scriptData->SDPEdits->Count : 0;
         unhandledScriptReturnDataCounts["ESPEdits"] = scriptData->ESPEdits ? scriptData->ESPEdits->Count : 0;
         unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
@@ -565,6 +572,20 @@ void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IMod
 
     // this is still ugly.
     mMoInfo->managedGame()->feature<GamePlugins>()->writePluginLists(mMoInfo->pluginList());
+
+
+    QStringList registeredBSAs = mod->pluginSetting("Omod Installer", omodName + ".registeredBSAs", QStringList()).toStringList();
+    if (!registeredBSAs.empty())
+    {
+      MOBase::log::debug("OMOD wants to register BSAs. We can't do that.");
+      QMessageBox::warning(mParentWidget, tr("Register BSAs"),
+                           /*: %1 is the OMOD name
+                               <ul><li>%2</li></ul> becomes a list of BSA files
+                           */
+                           tr("%1 wants to register the following BSA archives, but Mod Organizer 2 can't do that yet due to technical limitations:<ul><li>%2</li></ul>For now, your options include adding the BSA names to <code>sResourceArchiveList</code> in the game INI, creating a dummy ESP with the same name, or extracting the BSA, all of which have drawbacks.")
+                             .arg(omodName).arg(registeredBSAs.join("</li><li>"))
+                           );
+    }
   }
 
   mod->setPluginSetting("Omod Installer", "omodsPendingPostInstall", QStringList());
