@@ -279,6 +279,12 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
 
             MOBase::log::debug("OMOD wants to set [{}] {} to \"{}\", was \"{}\"", section, name, newValue, oldValue);
 
+            if (oldValue == newValue)
+            {
+              MOBase::log::debug("Value is unchanged, not nagging user.");
+              continue;
+            }
+
             QMessageBox::StandardButton response;
             if (!yesToAll)
             {
