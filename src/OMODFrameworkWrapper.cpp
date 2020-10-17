@@ -244,6 +244,20 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         // inis first so that you don't need to wait for extraction before a second batch of questions appears
         if (scriptData->INIEdits && scriptData->INIEdits->Count)
         {
+          QMap<QString, QMap<QString, QString>> iniEdits;
+          for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
+            iniEdits[toQString(edit->Section)][toQString(edit->Name)] = toQString(edit->NewValue);
+          // This feels like something I shouldn't need to do manually
+          QVariantMap iniEditsVariants;
+          for (const auto& section : iniEdits.keys())
+          {
+            QVariantMap innerMap;
+            for (const auto& setting : iniEdits[section])
+              innerMap[setting] = iniEdits[section][setting];
+            iniEditsVariants[section] = innerMap;
+          }
+          modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".iniEdits", iniEditsVariants);
+
           QString oblivionIniPath = mMoInfo->profile()->absoluteIniFilePath("Oblivion.ini");
           bool yesToAll = false;
           for each (OMODFramework::INIEditInfo ^ edit in scriptData->INIEdits)
