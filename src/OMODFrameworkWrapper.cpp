@@ -476,6 +476,8 @@ void OMODFrameworkWrapper::onInstallationEnd(EInstallResult status, MOBase::IMod
 
     if (response == QMessageBox::StandardButton::Yes)
       mMoInfo->modList()->setActive(mod->name(), true);
+    else
+      return;
   }
 
   for (const auto& omodName : omodsPendingPostInstall)
