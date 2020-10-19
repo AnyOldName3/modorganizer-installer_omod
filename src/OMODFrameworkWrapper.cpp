@@ -365,15 +365,36 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         }
         modInterface->setPluginSetting("Omod Installer", toQString(omod.ModName) + ".registeredBSAs", registeredBSAs);
 
+        if (scriptData->SDPEdits && scriptData->SDPEdits->Count)
+        {
+          for each (OMODFramework::SDPEditInfo ^ shaderEdit in scriptData->SDPEdits)
+          {
+            System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), "Shaders", "OMOD", toDotNetString(QString::number(shaderEdit->Package)));
+            System::IO::Directory::CreateDirectory(destinationPath);
+            System::IO::File::Copy(shaderEdit->BinaryObject, System::IO::Path::Combine(destinationPath, shaderEdit->Shader));
+          }
+
+          QString userMessage = tr("%1 has shader edits, but Mod Organizer 2 can't apply them yet.");
+          userMessage = userMessage.arg(toQString(omod.ModName));
+          messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
+          MOBase::log::warn("{} ({}) contains shader edits", toUTF8String(omod.ModName), archiveName);
+        }
+
         std::map<QString, int> unhandledScriptReturnDataCounts;
+        // This is a mapping from plugin name to an enum saying whether OBMM should allow the user to deactivate an ESP from the OMOD, disallow it, or just warn. By default, it'd warn.
         unhandledScriptReturnDataCounts["ESPDeactivation"] = scriptData->ESPDeactivation ? scriptData->ESPDeactivation->Count : 0;
+        // There's nothing in the OBMM documentation claiming the function that sets this exists.
         unhandledScriptReturnDataCounts["EarlyPlugins"] = scriptData->EarlyPlugins ? scriptData->EarlyPlugins->Count : 0;
+        // Sets load order a.esp, b.esp, true and b.esp, a.esp, false both mean the same thing.
         unhandledScriptReturnDataCounts["LoadOrderSet"] = scriptData->LoadOrderSet ? scriptData->LoadOrderSet->Count : 0;
+        // Says this OMOD conflicts with another, potentially with a description.
         unhandledScriptReturnDataCounts["ConflictsWith"] = scriptData->ConflictsWith ? scriptData->ConflictsWith->Count : 0;
+        // Says this OMOD depends on another, potentially with a description.
         unhandledScriptReturnDataCounts["DependsOn"] = scriptData->DependsOn ? scriptData->DependsOn->Count : 0;
 
-        unhandledScriptReturnDataCounts["SDPEdits"] = scriptData->SDPEdits ? scriptData->SDPEdits->Count : 0;
+        // Contains a list of GMSTs and Globals to edit in the mod's ESPs. May a higher being have mercy on us if anyone ever used this.
         unhandledScriptReturnDataCounts["ESPEdits"] = scriptData->ESPEdits ? scriptData->ESPEdits->Count : 0;
+        // OMODFramework is handling this for us, so don't sweat it.
         unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
 
         for (const auto& unhandledThing : unhandledScriptReturnDataCounts)
