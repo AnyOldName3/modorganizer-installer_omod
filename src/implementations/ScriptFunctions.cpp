@@ -176,12 +176,12 @@ System::String^ ScriptFunctions::InputString(System::String^ title, System::Stri
   return toDotNetString(mHelper->InputString(mParentWidget, toQString(title), initialText ? toQString(initialText) : ""));
 }
 
-int ScriptFunctions::DialogYesNo(System::String^ title)
+int ScriptFunctions::DialogYesNo(System::String^ message)
 {
-  return mHelper->question(mParentWidget, toQString(title), toQString(title)) == QMessageBox::StandardButton::Yes;
+  return mHelper->question(mParentWidget, "", toQString(message)) == QMessageBox::StandardButton::Yes;
 }
 
-int ScriptFunctions::DialogYesNo(System::String^ title, System::String^ message)
+int ScriptFunctions::DialogYesNo(System::String^ message, System::String^ title)
 {
   return mHelper->question(mParentWidget, toQString(title), toQString(message)) == QMessageBox::StandardButton::Yes;
 }

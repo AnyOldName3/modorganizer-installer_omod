@@ -77,9 +77,9 @@ public:
 
   virtual System::String^ InputString(System::String^ title, System::String^ initialText);
 
-  virtual int DialogYesNo(System::String^ title);
+  virtual int DialogYesNo(System::String^ message);
 
-  virtual int DialogYesNo(System::String^ title, System::String^ message);
+  virtual int DialogYesNo(System::String^ message, System::String^ title);
 
   virtual void DisplayImage(System::String^ path, System::String^ title);
 
