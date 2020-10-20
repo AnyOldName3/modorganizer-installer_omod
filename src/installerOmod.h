@@ -2,13 +2,14 @@
 #define INSTALLEROMOD_H
 
 #include <iplugininstallercustom.h>
+#include <ipluginfilemapper.h>
 
 #include "OMODFrameworkWrapper.h"
 
-class InstallerOMOD : public MOBase::IPluginInstallerCustom
+class InstallerOMOD : public MOBase::IPluginInstallerCustom, public MOBase::IPluginFileMapper
 {
   Q_OBJECT;
-  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom);
+  Q_INTERFACES(MOBase::IPlugin MOBase::IPluginInstaller MOBase::IPluginInstallerCustom MOBase::IPluginFileMapper);
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
   // We should probably buy a domain.
   Q_PLUGIN_METADATA(IID "org.AnyOldName3.InstallerOmod");
@@ -54,9 +55,19 @@ public:
 
   EInstallResult install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID) override;
 
+  // IPluginFileMapper
+
+  MappingType mappings() const override;
+
+protected:
+  void buildSDPs();
+
+  void clearSDPs();
+
 private:
   MOBase::IOrganizer* mMoInfo;
   std::unique_ptr<OMODFrameworkWrapper> mOmodFrameworkWrapper;
+  std::map<QString, std::unique_ptr<QTemporaryFile>> mVirtualSDPs;
 };
 
 #endif // !INSTALLEROMOD_H

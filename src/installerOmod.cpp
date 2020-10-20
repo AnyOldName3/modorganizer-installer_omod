@@ -1,6 +1,10 @@
 #include "installerOmod.h"
 
+#include <QRegularExpression>
+#include <QTemporaryFile>
+
 #include <iplugingame.h>
+#include <log.h>
 
 #include "OMODFrameworkWrapper.h"
 
@@ -15,6 +19,8 @@ bool InstallerOMOD::init(MOBase::IOrganizer* moInfo)
 {
   mMoInfo = moInfo;
   mOmodFrameworkWrapper = std::make_unique<OMODFrameworkWrapper>(mMoInfo);
+  mMoInfo->onAboutToRun([this](const QString&) { buildSDPs(); return true; });
+  mMoInfo->onFinishedRun([this](const QString&, unsigned int) { clearSDPs(); });
   return true;
 }
 
@@ -104,4 +110,95 @@ std::set<QString> InstallerOMOD::supportedExtensions() const
 InstallerOMOD::EInstallResult InstallerOMOD::install(MOBase::GuessedValue<QString>& modName, QString gameName, const QString& archiveName, const QString& version, int nexusID)
 {
   return mOmodFrameworkWrapper->installInAnotherThread(modName, gameName, archiveName, version, nexusID);
+}
+
+MappingType InstallerOMOD::mappings() const
+{
+  MOBase::log::debug("Mapping virtual SDPs");
+
+  MappingType mappings;
+
+  for (const auto& virtualSDP : mVirtualSDPs)
+    mappings.push_back({ virtualSDP.second->fileName(), virtualSDP.first, false, false });
+
+  return mappings;
+}
+
+void InstallerOMOD::buildSDPs()
+{
+  QStringList directories = mMoInfo->listDirectories("Shaders/OMOD");
+  directories = directories.filter(QRegularExpression("\\d+"));
+
+  for (const auto& directory : directories)
+  {
+    QString packagePath = mMoInfo->resolvePath(QString("Shaders/shaderpackage%1.sdp").arg(directory.toInt(), 3, 10, QChar('0')));
+    if (packagePath.isEmpty())
+      continue;
+
+    QMap<QByteArray, QByteArray> shaders;
+    {
+      QFile packageFile(packagePath);
+      packageFile.open(QIODevice::ReadOnly);
+      QDataStream basePackageStream(&packageFile);
+      basePackageStream.setByteOrder(QDataStream::LittleEndian);
+      quint32 magic;
+      basePackageStream >> magic;
+      if (magic != 100)
+      {
+        MOBase::log::debug("SDP magic number mismatch in {}, got {}, but expected 100", packagePath, magic);
+        continue;
+      }
+      quint32 shaderCount, totalSize;
+      basePackageStream >> shaderCount >> totalSize;
+      for (quint32 i = 0; i < shaderCount && !basePackageStream.atEnd(); ++i)
+      {
+        QByteArray shaderName(256, '\0');
+        basePackageStream.readRawData(shaderName.data(), 256);
+        quint32 shaderSize;
+        basePackageStream >> shaderSize;
+        QByteArray shaderBytecode(shaderSize, '\0');
+        basePackageStream.readRawData(shaderBytecode.data(), shaderSize);
+        shaders[shaderName] = shaderBytecode;
+      }
+    }
+
+    QStringList shaderFiles = mMoInfo->findFiles("Shaders/OMOD/" + directory, { "*.vso", "*.pso" });
+    for (const auto& shaderFile : shaderFiles)
+    {
+      QFileInfo info(shaderFile);
+      QByteArray shaderName = (info.baseName().toUpper() + "." + info.suffix().toLower()).toLatin1();
+      QFile file(shaderFile);
+      file.open(QIODevice::ReadOnly);
+      shaderName = shaderName.leftJustified(256, '\0', true);
+      shaders[shaderName] = file.readAll();
+      MOBase::log::debug("Replacement for {} was {} bytes long", shaderFile, shaders[shaderName].size());
+    }
+
+    std::unique_ptr<QTemporaryFile> outputFile = std::make_unique<QTemporaryFile>();
+    outputFile->open();
+    QDataStream packageStream(outputFile.get());
+    packageStream.setByteOrder(QDataStream::LittleEndian);
+    packageStream << quint32(100) << quint32(shaders.count());
+
+    quint32 totalSize = 0;
+    for (const auto& shader : shaders)
+      totalSize += 256 + 4 + shader.size();
+    packageStream << totalSize;
+
+    for (auto itr = shaders.cbegin(); itr != shaders.cend(); ++itr)
+    {
+      packageStream.writeRawData(itr.key().constData(), 256);
+      packageStream << quint32(itr.value().size());
+      packageStream.writeRawData(itr.value().constData(), itr.value().size());
+    }
+
+    outputFile->close();
+
+    mVirtualSDPs.emplace(mMoInfo->managedGame()->dataDirectory().absoluteFilePath(QString("Shaders/shaderpackage%1.sdp").arg(directory.toInt(), 3, 10, QChar('0'))), std::move(outputFile));
+  }
+}
+
+void InstallerOMOD::clearSDPs()
+{
+  mVirtualSDPs.clear();
 }
