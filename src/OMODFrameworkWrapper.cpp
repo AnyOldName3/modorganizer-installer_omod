@@ -371,7 +371,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           {
             System::String^ destinationPath = System::IO::Path::Combine(toDotNetString(modInterface->absolutePath()), "Shaders", "OMOD", toDotNetString(QString::number(shaderEdit->Package)));
             System::IO::Directory::CreateDirectory(destinationPath);
-            System::IO::File::Copy(shaderEdit->BinaryObject, System::IO::Path::Combine(destinationPath, shaderEdit->Shader));
+            System::IO::File::Copy(shaderEdit->BinaryObject, System::IO::Path::Combine(destinationPath, shaderEdit->Shader), true);
           }
         }
 
