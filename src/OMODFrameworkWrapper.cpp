@@ -447,6 +447,8 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       modInterface->setInstallationFile(archiveName);
     }
 
+    OMODFramework::Framework::CleanTempDir(false);
+
     QStringList omodsPendingPostInstall = modInterface->pluginSetting("Omod Installer", "omodsPendingPostInstall", QStringList()).toStringList();
     if (!omodsPendingPostInstall.contains(toQString(omod.ModName)))
     {
