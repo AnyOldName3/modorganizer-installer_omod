@@ -118,8 +118,8 @@ MappingType InstallerOMOD::mappings() const
 
   MappingType mappings;
 
-  for (const auto& virtualSDP : mVirtualSDPs)
-    mappings.push_back({ virtualSDP.second->fileName(), virtualSDP.first, false, false });
+  for (const auto& [realSDPPath, virtualSDP] : mVirtualSDPs)
+    mappings.push_back({ virtualSDP->fileName(), realSDPPath, false, false });
 
   return mappings;
 }

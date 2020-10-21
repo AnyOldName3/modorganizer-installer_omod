@@ -392,9 +392,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         // OMODFramework is handling this for us, so don't sweat it.
         unhandledScriptReturnDataCounts["PatchFiles"] = scriptData->PatchFiles ? scriptData->PatchFiles->Count : 0;
 
-        for (const auto& unhandledThing : unhandledScriptReturnDataCounts)
+        for (const auto& [name, usageCount] : unhandledScriptReturnDataCounts)
         {
-          if (unhandledThing.second)
+          if (usageCount)
           {
             /*: %1 is the mod name
                 %2 is the name of a field in the OMOD's return data
@@ -402,9 +402,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
             */
             QString userMessage = tr("%1 has data for %2, but Mod Organizer 2 doesn't know what to do with it yet. Please report this to the Mod Organizer 2 development team (ideally by sending us your interface log) as we didn't find any OMODs that actually did this, and we need to know that they exist.");
             userMessage = userMessage.arg(toQString(omod.ModName));
-            userMessage = userMessage.arg(unhandledThing.first);
+            userMessage = userMessage.arg(name);
             messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
-            MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, unhandledThing.second, unhandledThing.first);
+            MOBase::log::warn("{} ({}) contains {} entries for {}", toUTF8String(omod.ModName), archiveName, usageCount, name);
           }
         }
       }
