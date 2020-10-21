@@ -373,11 +373,6 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
             System::IO::Directory::CreateDirectory(destinationPath);
             System::IO::File::Copy(shaderEdit->BinaryObject, System::IO::Path::Combine(destinationPath, shaderEdit->Shader));
           }
-
-          QString userMessage = tr("%1 has shader edits, but Mod Organizer 2 can't apply them yet.");
-          userMessage = userMessage.arg(toQString(omod.ModName));
-          messageBoxHelper->warning(mParentWidget, tr("Mod Organizer 2 can't completely install this OMOD."), userMessage);
-          MOBase::log::warn("{} ({}) contains shader edits", toUTF8String(omod.ModName), archiveName);
         }
 
         std::map<QString, int> unhandledScriptReturnDataCounts;
