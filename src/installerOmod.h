@@ -31,7 +31,7 @@ public:
 
   MOBase::VersionInfo version() const override;
 
-  bool isActive() const override;
+  QList<MOBase::IPluginRequirement*> requirements() const override;
 
   QList<MOBase::PluginSetting> settings() const override;
 
