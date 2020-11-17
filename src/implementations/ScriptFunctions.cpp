@@ -220,6 +220,15 @@ bool ScriptFunctions::DataFileExists(System::String^ path)
 
 bool ScriptFunctions::HasScriptExtender()
 {
+  for (const auto& forcedLoad : mMoInfo->managedGame()->executableForcedLoads())
+  {
+    if (forcedLoad.library().toLower().startsWith("obse"))
+    {
+      if (mMoInfo->managedGame()->gameDirectory().exists(forcedLoad.library()))
+        return true;
+    }
+  }
+
   return mMoInfo->managedGame()->gameDirectory().exists("obse_loader.exe");
 }
 
@@ -230,7 +239,24 @@ bool ScriptFunctions::HasGraphicsExtender()
 
 System::Version^ ScriptFunctions::ScriptExtenderVersion()
 {
-  return gcnew System::Version(System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(mMoInfo->managedGame()->gameDirectory().filePath("obse_loader.exe")))->FileVersion);
+  QString obsePath;
+  for (const auto& forcedLoad : mMoInfo->managedGame()->executableForcedLoads())
+  {
+    if (forcedLoad.library().toLower().startsWith("obse"))
+    {
+      if (mMoInfo->managedGame()->gameDirectory().exists(forcedLoad.library()))
+      {
+        obsePath = mMoInfo->managedGame()->gameDirectory().filePath(forcedLoad.library());
+        break;
+      }
+    }
+  }
+
+  if (obsePath.isEmpty())
+    obsePath = mMoInfo->managedGame()->gameDirectory().filePath("obse_loader.exe");
+
+  System::Diagnostics::FileVersionInfo^ info = System::Diagnostics::FileVersionInfo::GetVersionInfo(toDotNetString(obsePath));
+  return gcnew System::Version(info->FileMajorPart, info->FileMinorPart, info->FileBuildPart, info->FilePrivatePart);
 }
 
 System::Version^ ScriptFunctions::GraphicsExtenderVersion()
