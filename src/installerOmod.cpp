@@ -49,14 +49,14 @@ MOBase::VersionInfo InstallerOMOD::version() const
   return MOBase::VersionInfo(1, 0, 0, MOBase::VersionInfo::RELEASE_PREALPHA);
 }
 
-bool InstallerOMOD::isActive() const
+QList<MOBase::IPluginRequirement*> InstallerOMOD::requirements() const
 {
-  return mMoInfo->pluginSetting(name(), "enabled").toBool() && mMoInfo->managedGame()->gameName() == "Oblivion";
+  return { Requirements::gameDependency("Oblivion") };
 }
 
 QList<MOBase::PluginSetting> InstallerOMOD::settings() const
 {
-  return { MOBase::PluginSetting("enabled", tr("Check to enable this plugin"), QVariant(true)) };
+  return {};
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
