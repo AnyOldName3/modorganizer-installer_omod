@@ -228,14 +228,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       {
         MOBase::log::debug("Mod has script. Run it.");
         OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget, mMoInfo);
-        OMODFramework::ScriptReturnData^ scriptData;
-        {
-          // workaround for https://github.com/erri120/OMODFramework/issues/31 - the compiler output path is set by a static initialiser and never updated when temp is changed
-          // the static intialiser is lazy, so is run when the first script is compiled. We must have a reusable temp path when that happens.
-          pushTempPath(mTempPathStack.first());
-          scope_guard tempPathGuard([this]() { this->popTempPath(); });
-          scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
-        }
+        OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
         if (!scriptData)
           throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
         if (scriptData->CancelInstall)
