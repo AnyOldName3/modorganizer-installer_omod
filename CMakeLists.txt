@@ -15,7 +15,7 @@ set(enable_warnings OFF)
 add_library(dummy_cs_project SHARED DummyCSFile.cs)
 set_target_properties(dummy_cs_project PROPERTIES
 	LINKER_LANGUAGE CSharp
-	VS_PACKAGE_REFERENCES "OMODFramework_2.0.1;OMODFramework.Scripting_2.0.0;RtfPipe_1.0.7388.1242"
+	VS_PACKAGE_REFERENCES "OMODFramework_2.1.0.1;OMODFramework.Scripting_2.1.0.1;RtfPipe_1.0.7388.1242"
 )
 
 if(DEFINED DEPENDENCIES_DIR)
