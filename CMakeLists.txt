@@ -56,7 +56,5 @@ install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.dll" D
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.dll" DESTINATION "${install_dir}/data")
 install(FILES "$<TARGET_FILE_DIR:${PROJECT_NAME}>/RtfPipe.dll" DESTINATION "${install_dir}/data")
-#install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.pdb" DESTINATION pdb)
-install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/OMODFramework.Scripting.pdb" DESTINATION pdb)
 install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/ICSharpCode.SharpZipLib.pdb" DESTINATION pdb)
-#install(FILES "$<TARGET_PDB_FILE_DIR:${PROJECT_NAME}>/System.Drawing.Common.pdb" DESTINATION pdb)
+# Other PDB files get downloaded by Visual Studio during debugging when https://symbols.nuget.org/download/symbols is in the symbol server list
