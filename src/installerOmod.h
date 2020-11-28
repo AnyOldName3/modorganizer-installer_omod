@@ -31,7 +31,7 @@ public:
 
   MOBase::VersionInfo version() const override;
 
-  QList<MOBase::IPluginRequirement*> requirements() const override;
+  std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> requirements() const override;
 
   QList<MOBase::PluginSetting> settings() const override;
 

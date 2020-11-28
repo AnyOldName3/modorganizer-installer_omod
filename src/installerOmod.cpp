@@ -49,7 +49,7 @@ MOBase::VersionInfo InstallerOMOD::version() const
   return MOBase::VersionInfo(1, 0, 0, MOBase::VersionInfo::RELEASE_PREALPHA);
 }
 
-QList<MOBase::IPluginRequirement*> InstallerOMOD::requirements() const
+std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> InstallerOMOD::requirements() const
 {
   return { Requirements::gameDependency("Oblivion") };
 }
