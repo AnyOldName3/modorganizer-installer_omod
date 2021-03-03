@@ -17,6 +17,7 @@ using namespace cli;
 #include <utility.h>
 #include <registry.h>
 
+#include <dataarchives.h>
 #include <gameplugins.h>
 
 #include "implementations/CodeProgress.h"
@@ -228,6 +229,40 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
       {
         MOBase::log::debug("Mod has script. Run it.");
         OMODFramework::Scripting::IScriptFunctions^ scriptFunctions = gcnew ScriptFunctions(mParentWidget, mMoInfo);
+
+        System::Collections::Generic::List<System::String^>^ activeBSAs = gcnew System::Collections::Generic::List<System::String^>();
+        {
+          // Hopefully some other part of MO2 also knows this and this can be refactored
+          auto dataArchives = mMoInfo->managedGame()->feature<DataArchives>();
+          // force-enabled by engine
+          auto bsas = dataArchives->vanillaArchives();
+          // explicitly enabled in INI. For Oblivion, excludes the vanilla BSAs by default.
+          bsas.append(dataArchives->archives(mMoInfo->profile()));
+          for (const auto& bsa : bsas)
+          {
+            QString path = mMoInfo->resolvePath(bsa);
+            if (!path.isEmpty())
+              activeBSAs->Add(toDotNetString(path));
+          }
+
+          std::map<int, QString> loadOrder;
+          for (const auto& plugin : mMoInfo->pluginList()->pluginNames())
+          {
+            int loadIndex = mMoInfo->pluginList()->loadOrder(plugin);
+            if (loadIndex != -1)
+              loadOrder[loadIndex] = plugin;
+          }
+          for (const auto& [loadIndex, plugin] : loadOrder)
+          {
+            QString bsaPath = QFileInfo(plugin).completeBaseName() + ".bsa";
+            bsaPath = mMoInfo->resolvePath(bsaPath);
+            if (!bsaPath.isEmpty())
+              activeBSAs->Add(toDotNetString(bsaPath));
+          }
+        }
+        OMODFramework::Framework::LoadBSAs(activeBSAs);
+        scope_guard bsaGuard([]() { OMODFramework::Framework::ClearBSAs(); });
+
         OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
         if (!scriptData)
           throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
