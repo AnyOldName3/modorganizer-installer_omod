@@ -70,17 +70,28 @@ OMODFrameworkWrapper::OMODFrameworkWrapper(MOBase::IOrganizer* organizer, QWidge
   , mParentWidget(parentWidget)
   , mWaitDialog(make_nullptr<QProgressDialog>())
 {
-  AssemblyResolver::initialise(mMoInfo);
+  try
+  {
+    AssemblyResolver::initialise(mMoInfo);
 
-  constructorHelper();
+    constructorHelper();
 
-  connect(this, &OMODFrameworkWrapper::pickModName, this, &OMODFrameworkWrapper::pickModNameSlot, Qt::ConnectionType::BlockingQueuedConnection);
-  connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
-  connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
-  connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
-  connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
+    connect(this, &OMODFrameworkWrapper::pickModName, this, &OMODFrameworkWrapper::pickModNameSlot, Qt::ConnectionType::BlockingQueuedConnection);
+    connect(this, &OMODFrameworkWrapper::createMod, this, &OMODFrameworkWrapper::createModSlot, Qt::ConnectionType::BlockingQueuedConnection);
+    connect(this, &OMODFrameworkWrapper::displayReadme, this, &OMODFrameworkWrapper::displayReadmeSlot, Qt::ConnectionType::BlockingQueuedConnection);
+    connect(this, &OMODFrameworkWrapper::showWaitDialog, this, &OMODFrameworkWrapper::showWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
+    connect(this, &OMODFrameworkWrapper::hideWaitDialog, this, &OMODFrameworkWrapper::hideWaitDialogSlot, Qt::ConnectionType::QueuedConnection);
 
-  initFrameworkSettings();
+    initFrameworkSettings();
+  }
+  catch (const std::exception& e)
+  {
+    throw;
+  }
+  catch (System::Exception^ dotNetException)
+  {
+    throw toStdException(dotNetException);
+  }
 }
 
 void OMODFrameworkWrapper::constructorHelper()
