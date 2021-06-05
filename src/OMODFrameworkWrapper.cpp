@@ -658,10 +658,10 @@ void OMODFrameworkWrapper::initFrameworkSettings()
   OMODFramework::Framework::Settings->DllPath = System::IO::Path::Combine(System::IO::Path::GetDirectoryName(OMODFramework::Framework::Settings->DllPath), "OMODFramework.Scripting.dll");
 
   OMODFramework::LoggingSettings^ loggingSettings = OMODFramework::Framework::Settings->LoggingSettings;
-  loggingSettings->UseLogger = true;
   loggingSettings->LogToFile = false;
   loggingSettings->LowestLoggingLevel = Logger::OMODLoggingLevel(MOBase::log::getDefault().level());
   loggingSettings->Logger = gcnew Logger();
+  loggingSettings->UseLogger = true;
 
   OMODFramework::ScriptExecutionSettings^ scriptSettings = gcnew OMODFramework::ScriptExecutionSettings();
   scriptSettings->EnableWarnings = true;
