@@ -30,7 +30,7 @@ public:
   }
 
 protected:
-  void enterEvent(QEvent*) override
+  void enterEvent(QEnterEvent*) override
   {
     onHover();
   }

@@ -11,7 +11,7 @@ NameDialog::NameDialog(const MOBase::GuessedValue<QString>& suggestedNames, QWid
   ui.nameCombo->setCurrentIndex(ui.nameCombo->findText(suggestedNames));
 
   setWindowFlags(windowFlags() & (~Qt::WindowContextHelpButtonHint));
-  ui.nameCombo->setAutoCompletionCaseSensitivity(Qt::CaseSensitive);
+  ui.nameCombo->completer()->setCaseSensitivity(Qt::CaseSensitive);
 }
 
 QString NameDialog::getName() const
