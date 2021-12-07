@@ -29,8 +29,7 @@ public:
   {
   }
 
-protected:
-  void enterEvent(QEnterEvent*) override
+protected:  void enterEvent(QEnterEvent*) override
   {
     onHover();
   }

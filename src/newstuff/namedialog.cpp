@@ -1,5 +1,7 @@
 #include "namedialog.h"
 
+#include <QCompleter>
+
 NameDialog::NameDialog(const MOBase::GuessedValue<QString>& suggestedNames, QWidget* parent)
   : QDialog(parent), ui(), mName(suggestedNames)
 {
