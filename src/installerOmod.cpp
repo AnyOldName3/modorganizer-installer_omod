@@ -46,7 +46,7 @@ QString InstallerOMOD::description() const
 
 MOBase::VersionInfo InstallerOMOD::version() const
 {
-  return MOBase::VersionInfo(1, 0, 0, MOBase::VersionInfo::RELEASE_PREALPHA);
+  return MOBase::VersionInfo(1, 1, 0, MOBase::VersionInfo::RELEASE_FINAL);
 }
 
 std::vector<std::shared_ptr<const MOBase::IPluginRequirement>> InstallerOMOD::requirements() const
