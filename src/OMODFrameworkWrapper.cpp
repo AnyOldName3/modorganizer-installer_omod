@@ -274,7 +274,9 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
         OMODFramework::Framework::LoadBSAs(activeBSAs);
         scope_guard bsaGuard([]() { OMODFramework::Framework::ClearBSAs(); });
 
-        OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions);
+        System::String^ dataPath = omod.GetDataFiles();
+        System::String^ pluginsPath = omod.GetPlugins();
+        OMODFramework::ScriptReturnData^ scriptData = OMODFramework::Scripting::ScriptRunner::RunScript(%omod, scriptFunctions, dataPath, pluginsPath);
         if (!scriptData)
           throw std::runtime_error("OMOD script returned no result. This isn't supposed to happen.");
         if (scriptData->CancelInstall)
@@ -368,7 +370,7 @@ OMODFrameworkWrapper::EInstallResult OMODFrameworkWrapper::install(MOBase::Guess
           }
         }
 
-        scriptData->Pretty(%omod, omod.GetDataFiles(), omod.GetPlugins());
+        scriptData->Pretty(%omod, dataPath, pluginsPath);
         // no compatability between auto and var makes me :angery:
         System::Collections::Generic::HashSet<System::String^>^ installedPlugins = gcnew System::Collections::Generic::HashSet<System::String^>(System::StringComparer::InvariantCultureIgnoreCase);
         for each (OMODFramework::InstallFile file in scriptData->InstallFiles)
